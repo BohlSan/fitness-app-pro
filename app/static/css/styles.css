@@ -1,0 +1,69 @@
+:root {
+  --fondo: #f4f6f8;
+  --tarjeta: #ffffff;
+  --texto: #1c2430;
+  --acento: #1f7a4d;
+  --borde: #d5dbe1;
+  --error: #b3261e;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--fondo);
+  color: var(--texto);
+}
+
+.pantalla {
+  max-width: 420px;
+  min-height: 100vh;
+  margin: 0 auto;
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+}
+
+h1 { margin: 0; font-size: 1.7rem; }
+.subtitulo { margin: 0 0 8px; color: #55606c; }
+
+.boton {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--acento);
+  color: #fff;
+  font-size: 1rem;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+}
+.boton.secundario { background: var(--tarjeta); color: var(--acento); border: 2px solid var(--acento); }
+.boton:disabled { background: #c5ccd3; color: #fff; cursor: not-allowed; }
+
+.tarjeta-rol {
+  background: var(--tarjeta);
+  border: 2px solid var(--borde);
+  border-radius: 20px;
+  padding: 36px 20px;
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+.tarjeta-rol:hover { border-color: var(--acento); }
+
+form { display: flex; flex-direction: column; gap: 12px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
+input {
+  padding: 12px;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  font-size: 1rem;
+}
+
+.mensaje-error { min-height: 1.2em; margin: 0; color: var(--error); font-size: 0.9rem; }
+.enlace { text-align: center; font-size: 0.9rem; }

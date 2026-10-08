@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Iniciar sesión</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="pantalla">
+    <h1>Iniciar sesión</h1>
+    <form id="form-login">
+      <label>Email
+        <input type="email" id="email" required autocomplete="email">
+      </label>
+      <label>Contraseña
+        <input type="password" id="password" required autocomplete="current-password">
+      </label>
+      <p class="mensaje-error" id="error"></p>
+      <button class="boton" type="submit">Entrar</button>
+    </form>
+    <p class="enlace">¿No tenés cuenta? <a href="/seleccion-perfil.html">Registrate</a></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script>
+    document.getElementById("form-login").addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      const error = document.getElementById("error");
+      error.textContent = "";
+      try {
+        const auth = await apiFetch("/auth/login", {
+          method: "POST",
+          body: {
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value,
+          },
+        });
+        guardarSesion(auth);
+        window.location.href = "/home.html";
+      } catch (e) {
+        error.textContent = e.message;
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fitness App</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="pantalla">
+    <h1>Bienvenido a Fitness App</h1>
+    <p class="subtitulo">Prepárate para conseguir tu mejor versión</p>
+    <button class="boton" disabled title="Próximamente">Registrarse con Google</button>
+    <a class="boton" href="/seleccion-perfil.html">Registrarse con Mail</a>
+    <a class="boton secundario" href="/login.html">Iniciar sesión</a>
+  </main>
+  <script src="/js/api.js"></script>
+  <script>
+    if (obtenerToken()) window.location.href = "/home.html";
+  </script>
+</body>
+</html>

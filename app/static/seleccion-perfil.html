@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Selección de perfil</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="pantalla">
+    <h1>¿Cómo vas a usar la app?</h1>
+    <button class="tarjeta-rol" data-rol="USUARIO">Usuario Particular</button>
+    <button class="tarjeta-rol" data-rol="PERSONAL_TRAINER">Personal Trainer</button>
+    <p class="enlace"><a href="/index.html">Volver</a></p>
+  </main>
+  <script>
+    document.querySelectorAll(".tarjeta-rol").forEach((boton) => {
+      boton.addEventListener("click", () => {
+        sessionStorage.setItem("rol_registro", boton.dataset.rol);
+        window.location.href = "/registro.html";
+      });
+    });
+  </script>
+</body>
+</html>

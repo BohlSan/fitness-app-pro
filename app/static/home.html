@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inicio</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="pantalla">
+    <h1 id="saludo">Hola</h1>
+    <p class="subtitulo" id="rol"></p>
+    <p>Home provisorio. El formulario de perfil llega en la Etapa 2.</p>
+    <button class="boton secundario" id="salir">Cerrar sesión</button>
+  </main>
+  <script src="/js/api.js"></script>
+  <script>
+    requerirSesion();
+
+    const etiquetas = { USUARIO: "Usuario Particular", PERSONAL_TRAINER: "Personal Trainer" };
+
+    apiFetch("/auth/me").then((usuario) => {
+      document.getElementById("saludo").textContent = "Hola, " + usuario.nombre;
+      document.getElementById("rol").textContent = etiquetas[usuario.rol] || "";
+    });
+
+    document.getElementById("salir").addEventListener("click", cerrarSesion);
+  </script>
+</body>
+</html>

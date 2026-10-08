@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Crear cuenta</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <main class="pantalla">
+    <h1>Crear cuenta</h1>
+    <p class="subtitulo" id="rol-elegido"></p>
+    <form id="form-registro">
+      <label>Nombre
+        <input type="text" id="nombre" required maxlength="100" autocomplete="name">
+      </label>
+      <label>Email
+        <input type="email" id="email" required autocomplete="email">
+      </label>
+      <label>Contraseña (mínimo 8 caracteres)
+        <input type="password" id="password" required minlength="8" maxlength="72" autocomplete="new-password">
+      </label>
+      <label>Repetir contraseña
+        <input type="password" id="password2" required minlength="8" maxlength="72" autocomplete="new-password">
+      </label>
+      <p class="mensaje-error" id="error"></p>
+      <button class="boton" type="submit">Registrarme</button>
+    </form>
+    <p class="enlace">¿Ya tenés cuenta? <a href="/login.html">Iniciá sesión</a></p>
+  </main>
+  <script src="/js/api.js"></script>
+  <script>
+    const rol = sessionStorage.getItem("rol_registro");
+    if (!rol) window.location.href = "/seleccion-perfil.html";
+
+    const etiquetas = { USUARIO: "Usuario Particular", PERSONAL_TRAINER: "Personal Trainer" };
+    document.getElementById("rol-elegido").textContent = "Perfil: " + (etiquetas[rol] || "");
+
+    document.getElementById("form-registro").addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      const error = document.getElementById("error");
+      error.textContent = "";
+
+      const password = document.getElementById("password").value;
+      if (password !== document.getElementById("password2").value) {
+        error.textContent = "Las contraseñas no coinciden.";
+        return;
+      }
+
+      try {
+        const auth = await apiFetch("/auth/registro", {
+          method: "POST",
+          body: {
+            nombre: document.getElementById("nombre").value,
+            email: document.getElementById("email").value,
+            password: password,
+            rol: rol,
+          },
+        });
+        guardarSesion(auth);
+        sessionStorage.removeItem("rol_registro");
+        window.location.href = "/home.html";
+      } catch (e) {
+        error.textContent = e.message;
+      }
+    });
+  </script>
+</body>
+</html>
