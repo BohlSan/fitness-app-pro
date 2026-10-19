@@ -21,7 +21,7 @@
     </form>
     <p class="enlace">¿No tenés cuenta? <a href="/seleccion-perfil.html">Registrate</a></p>
   </main>
-  <script src="/js/api.js"></script>
+  <script src="/js/api.js?v=3"></script>
   <script>
     document.getElementById("form-login").addEventListener("submit", async (evento) => {
       evento.preventDefault();
@@ -36,11 +36,11 @@
           },
         });
         guardarSesion(auth);
-        window.location.href = "/home.html";
+        await irAlDestino(auth.usuario);
       } catch (e) {
         error.textContent = e.message;
       }
     });
   </script>
 </body>
-</html>
+</html>s

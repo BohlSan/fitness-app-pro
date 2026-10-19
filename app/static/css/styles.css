@@ -2,7 +2,9 @@
   --fondo: #f4f6f8;
   --tarjeta: #ffffff;
   --texto: #1c2430;
+  --texto-suave: #5d6b75;
   --acento: #1f7a4d;
+  --acento-claro: #e8f5ee;
   --borde: #d5dbe1;
   --error: #b3261e;
 }
@@ -14,7 +16,10 @@ body {
   font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   background: var(--fondo);
   color: var(--texto);
+  line-height: 1.45;
 }
+
+.oculto { display: none !important; }
 
 .pantalla {
   max-width: 420px;
@@ -28,7 +33,7 @@ body {
 }
 
 h1 { margin: 0; font-size: 1.7rem; }
-.subtitulo { margin: 0 0 8px; color: #55606c; }
+.subtitulo { margin: 0 0 8px; color: var(--texto-suave); }
 
 .boton {
   display: block;
@@ -39,12 +44,25 @@ h1 { margin: 0; font-size: 1.7rem; }
   background: var(--acento);
   color: #fff;
   font-size: 1rem;
+  font-weight: 600;
   text-align: center;
   text-decoration: none;
   cursor: pointer;
+  transition: filter 0.15s ease, transform 0.05s ease;
 }
-.boton.secundario { background: var(--tarjeta); color: var(--acento); border: 2px solid var(--acento); }
-.boton:disabled { background: #c5ccd3; color: #fff; cursor: not-allowed; }
+.boton:hover { filter: brightness(1.08); }
+.boton:active { transform: scale(0.99); }
+.boton.secundario {
+  background: var(--tarjeta);
+  color: var(--acento);
+  border: 2px solid var(--acento);
+}
+.boton:disabled {
+  background: #c5ccd3;
+  color: #fff;
+  cursor: not-allowed;
+  filter: none;
+}
 
 .tarjeta-rol {
   background: var(--tarjeta);
@@ -53,17 +71,43 @@ h1 { margin: 0; font-size: 1.7rem; }
   padding: 36px 20px;
   font-size: 1.15rem;
   cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
-.tarjeta-rol:hover { border-color: var(--acento); }
+.tarjeta-rol:hover {
+  border-color: var(--acento);
+  box-shadow: 0 6px 18px rgba(31, 122, 77, 0.12);
+}
 
 form { display: flex; flex-direction: column; gap: 12px; }
 label { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; }
-input {
+
+input:not([type="radio"]),
+select {
   padding: 12px;
   border: 1px solid var(--borde);
   border-radius: 10px;
   font-size: 1rem;
+  background: #fff;
+  color: var(--texto);
 }
+input:not([type="radio"]):focus,
+select:focus {
+  outline: none;
+  border-color: var(--acento);
+  box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.15);
+}
+input:disabled { background: #f0f2f4; color: #8a949d; }
 
 .mensaje-error { min-height: 1.2em; margin: 0; color: var(--error); font-size: 0.9rem; }
 .enlace { text-align: center; font-size: 0.9rem; }
+
+.resumen {
+  list-style: none;
+  margin: 0;
+  padding: 16px;
+  background: var(--tarjeta);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}

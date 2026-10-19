@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Completá tu perfil</title>
+  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/formulario.css?v=4">
+</head>
+<body class="fondo-formulario">
+  <main class="wizard">
+    <header>
+      <p class="wizard-marca">Fitness App</p>
+      <div id="progreso" role="progressbar" aria-label="Progreso del formulario"
+           aria-valuemin="1" aria-valuemax="3" aria-valuenow="1">
+        <div class="progreso-barra"><div class="progreso-relleno" id="relleno"></div></div>
+        <ol class="progreso-pasos" id="lista-pasos">
+          <li><span class="num">1</span><span class="nombre">Sobre mí</span></li>
+          <li><span class="num">2</span><span class="nombre">Mis medidas</span></li>
+          <li><span class="num">3</span><span class="nombre">Mis objetivos</span></li>
+        </ol>
+      </div>
+    </header>
+
+    <form id="form-perfil" class="wizard-tarjeta" novalidate>
+      <div class="encabezado-paso">
+        <h1 id="titulo-paso"></h1>
+        <p id="subtitulo-paso"></p>
+      </div>
+
+      <!-- Paso 1: Sobre mí -->
+      <section class="paso" data-titulo="Sobre mí" data-subtitulo="Contanos un poco quién sos.">
+        <label class="campo">Fecha de nacimiento
+          <input type="date" id="fecha_nacimiento">
+        </label>
+        <fieldset class="campo">
+          <legend>Género</legend>
+          <div class="opciones tres">
+            <label class="opcion"><input type="radio" name="genero" value="MASCULINO"><span>Masculino</span></label>
+            <label class="opcion"><input type="radio" name="genero" value="FEMENINO"><span>Femenino</span></label>
+            <label class="opcion"><input type="radio" name="genero" value="OTRO"><span>Otro</span></label>
+          </div>
+        </fieldset>
+      </section>
+
+      <!-- Paso 2: Mis medidas -->
+      <section class="paso oculto" data-titulo="Mis medidas" data-subtitulo="Las usamos para seguir tu evolución.">
+        <label class="campo">Altura
+          <div class="input-unidad">
+            <input type="number" id="altura_cm" inputmode="numeric" min="100" max="250" step="1" placeholder="175">
+            <span>cm</span>
+          </div>
+        </label>
+        <label class="campo">Peso actual
+          <div class="input-unidad">
+            <input type="number" id="peso_actual_kg" inputmode="decimal" min="21" max="400" step="0.1" placeholder="70.5">
+            <span>kg</span>
+          </div>
+        </label>
+      </section>
+
+      <!-- Paso 3: Mis objetivos -->
+      <section class="paso oculto" data-titulo="Mis objetivos" data-subtitulo="Armamos tu experiencia a partir de esto.">
+        <fieldset class="campo">
+          <legend>Mi objetivo</legend>
+          <div class="opciones dos">
+            <label class="opcion"><input type="radio" name="objetivo" value="PERDER_PESO"><span><span class="icono">🔥</span>Perder peso</span></label>
+            <label class="opcion"><input type="radio" name="objetivo" value="GANAR_MASA_MUSCULAR"><span><span class="icono">💪</span>Ganar masa muscular</span></label>
+            <label class="opcion"><input type="radio" name="objetivo" value="MANTENER_PESO"><span><span class="icono">⚖️</span>Mantener peso</span></label>
+            <label class="opcion"><input type="radio" name="objetivo" value="MEJORAR_RENDIMIENTO"><span><span class="icono">🚀</span>Mejorar rendimiento</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="campo">
+          <legend>Días de entrenamiento por semana</legend>
+          <div class="opciones dias">
+            <label class="opcion"><input type="radio" name="dias" value="1"><span>1</span></label>
+            <label class="opcion"><input type="radio" name="dias" value="2"><span>2</span></label>
+            <label class="opcion"><input type="radio" name="dias" value="3"><span>3</span></label>
+            <label class="opcion"><input type="radio" name="dias" value="4"><span>4</span></label>
+            <label class="opcion"><input type="radio" name="dias" value="5"><span>5</span></label>
+            <label class="opcion"><input type="radio" name="dias" value="6"><span>6</span></label>
+            <label class="opcion"><input type="radio" name="dias" value="7"><span>7</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="campo">
+          <legend>Registrar mi hidratación en</legend>
+          <div class="opciones dos">
+            <label class="opcion"><input type="radio" name="unidad" value="ML" checked><span>Mililitros</span></label>
+            <label class="opcion"><input type="radio" name="unidad" value="BOTELLAS"><span>Botellas</span></label>
+          </div>
+        </fieldset>
+
+        <label class="campo oculto" id="grupo-botella">¿Cuántos ml tiene tu botella?
+          <div class="input-unidad">
+            <input type="number" id="ml_botella" inputmode="numeric" min="100" max="5000" step="50" placeholder="750">
+            <span>ml</span>
+          </div>
+        </label>
+
+        <label class="campo">Código de tu personal trainer
+          <small>Opcional. Disponible próximamente.</small>
+          <input type="text" id="codigo_enlace" disabled placeholder="Próximamente">
+        </label>
+      </section>
+
+      <p class="mensaje-error" id="error" role="alert"></p>
+
+      <div class="acciones-wizard">
+        <button type="button" class="boton secundario oculto" id="atras">Atrás</button>
+        <button type="submit" class="boton" id="siguiente">Siguiente</button>
+      </div>
+      <p class="pie-wizard">Vas a poder cambiar estos datos más adelante.</p>
+    </form>
+  </main>
+
+  <script src="/js/api.js?v=3"></script>
+  <script>
+    requerirSesion();
+
+    const sesion = obtenerUsuario();
+    if (!sesion || sesion.rol !== "USUARIO") window.location.href = "/home.html";
+
+    // Si ya completó el perfil, no tiene que volver a hacerlo
+    apiFetch("/perfil").then(() => { window.location.href = "/home.html"; }).catch(() => {});
+
+    const EDAD_MINIMA = 14;
+    const EDAD_MAXIMA = 100;
+
+    const formulario = document.getElementById("form-perfil");
+    const pasos = Array.from(document.querySelectorAll(".paso"));
+    const indicadores = Array.from(document.querySelectorAll("#lista-pasos li"));
+    const relleno = document.getElementById("relleno");
+    const progreso = document.getElementById("progreso");
+    const titulo = document.getElementById("titulo-paso");
+    const subtitulo = document.getElementById("subtitulo-paso");
+    const botonAtras = document.getElementById("atras");
+    const botonSiguiente = document.getElementById("siguiente");
+    const error = document.getElementById("error");
+    const grupoBotella = document.getElementById("grupo-botella");
+
+    let actual = 0;
+    let guardando = false;
+
+    document.getElementById("fecha_nacimiento").max = new Date().toISOString().split("T")[0];
+
+    // ---------- Utilidades ----------
+    function valor(id) {
+      return document.getElementById(id).value.trim();
+    }
+
+    function seleccionado(nombre) {
+      const marcado = document.querySelector(`input[name="${nombre}"]:checked`);
+      return marcado ? marcado.value : "";
+    }
+
+    function calcularEdad(fechaTexto) {
+      const [anio, mes, dia] = fechaTexto.split("-").map(Number);
+      const hoy = new Date();
+      let edad = hoy.getFullYear() - anio;
+      const cumplio =
+        hoy.getMonth() + 1 > mes || (hoy.getMonth() + 1 === mes && hoy.getDate() >= dia);
+      if (!cumplio) edad -= 1;
+      return edad;
+    }
+
+    function limpiarError() {
+      error.textContent = "";
+      document.querySelectorAll(".invalido").forEach((el) => el.classList.remove("invalido"));
+    }
+
+    function mostrarError(mensaje, campoId) {
+      error.textContent = mensaje;
+      if (campoId) {
+        const campo = document.getElementById(campoId);
+        campo.classList.add("invalido");
+        campo.focus();
+      }
+    }
+
+    // ---------- Validación por paso (el servidor valida de nuevo) ----------
+    const validaciones = [
+      function sobreMi() {
+        const fecha = valor("fecha_nacimiento");
+        if (!fecha) {
+          return { campo: "fecha_nacimiento", mensaje: "Ingresá tu fecha de nacimiento." };
+        }
+        const edad = calcularEdad(fecha);
+        if (edad < EDAD_MINIMA || edad > EDAD_MAXIMA) {
+          return {
+            campo: "fecha_nacimiento",
+            mensaje: `La edad debe estar entre ${EDAD_MINIMA} y ${EDAD_MAXIMA} años.`,
+          };
+        }
+        if (!seleccionado("genero")) return { mensaje: "Elegí una opción de género." };
+        return null;
+      },
+      function misMedidas() {
+        const altura = Number(valor("altura_cm"));
+        if (!valor("altura_cm") || altura < 100 || altura > 250) {
+          return { campo: "altura_cm", mensaje: "Ingresá una altura entre 100 y 250 cm." };
+        }
+        const peso = Number(valor("peso_actual_kg"));
+        if (!valor("peso_actual_kg") || peso <= 20 || peso > 400) {
+          return {
+            campo: "peso_actual_kg",
+            mensaje: "Ingresá un peso válido en kg (más de 20 y hasta 400).",
+          };
+        }
+        return null;
+      },
+      function misObjetivos() {
+        if (!seleccionado("objetivo")) return { mensaje: "Elegí tu objetivo." };
+        if (!seleccionado("dias")) {
+          return { mensaje: "Elegí cuántos días por semana querés entrenar." };
+        }
+        if (seleccionado("unidad") === "BOTELLAS") {
+          const ml = Number(valor("ml_botella"));
+          if (!valor("ml_botella") || ml < 100 || ml > 5000) {
+            return {
+              campo: "ml_botella",
+              mensaje: "Indicá cuántos ml tiene tu botella (entre 100 y 5000).",
+            };
+          }
+        }
+        return null;
+      },
+    ];
+
+    // ---------- Navegación ----------
+    function mostrarPaso(indice) {
+      actual = indice;
+      pasos.forEach((paso, i) => paso.classList.toggle("oculto", i !== indice));
+      indicadores.forEach((item, i) => {
+        item.classList.toggle("activo", i === indice);
+        item.classList.toggle("completo", i < indice);
+        item.querySelector(".num").textContent = i < indice ? "✓" : String(i + 1);
+      });
+      relleno.style.width = `${((indice + 1) / pasos.length) * 100}%`;
+      progreso.setAttribute("aria-valuenow", String(indice + 1));
+      titulo.textContent = pasos[indice].dataset.titulo;
+      subtitulo.textContent = pasos[indice].dataset.subtitulo;
+      botonAtras.classList.toggle("oculto", indice === 0);
+      botonSiguiente.textContent =
+        indice === pasos.length - 1 ? "Guardar y empezar" : "Siguiente";
+      limpiarError();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    async function guardar() {
+      guardando = true;
+      botonSiguiente.disabled = true;
+      botonSiguiente.textContent = "Guardando…";
+
+      const usaBotella = seleccionado("unidad") === "BOTELLAS";
+      const cuerpo = {
+        fecha_nacimiento: valor("fecha_nacimiento"),
+        genero: seleccionado("genero"),
+        altura_cm: Number(valor("altura_cm")),
+        peso_actual_kg: Number(valor("peso_actual_kg")),
+        objetivo: seleccionado("objetivo"),
+        dias_entrenamiento_semana: Number(seleccionado("dias")),
+        unidad_hidratacion: seleccionado("unidad"),
+        ml_botella: usaBotella ? Number(valor("ml_botella")) : null,
+      };
+
+      try {
+        await apiFetch("/perfil", { method: "POST", body: cuerpo });
+        window.location.href = "/home.html";
+      } catch (e) {
+        if (e.status === 409) {
+          window.location.href = "/home.html";
+          return;
+        }
+        mostrarError(e.message);
+        guardando = false;
+        botonSiguiente.disabled = false;
+        botonSiguiente.textContent = "Guardar y empezar";
+      }
+    }
+
+    // ---------- Eventos ----------
+    document.querySelectorAll('input[name="unidad"]').forEach((radio) => {
+      radio.addEventListener("change", () => {
+        grupoBotella.classList.toggle("oculto", seleccionado("unidad") !== "BOTELLAS");
+      });
+    });
+
+    formulario.addEventListener("input", limpiarError);
+
+    formulario.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      if (guardando) return;
+      limpiarError();
+
+      const problema = validaciones[actual]();
+      if (problema) {
+        mostrarError(problema.mensaje, problema.campo);
+        return;
+      }
+      if (actual < pasos.length - 1) {
+        mostrarPaso(actual + 1);
+        return;
+      }
+      await guardar();
+    });
+
+    botonAtras.addEventListener("click", () => mostrarPaso(actual - 1));
+
+    mostrarPaso(0);
+  </script>
+</body>
+</html>

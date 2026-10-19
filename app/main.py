@@ -7,12 +7,23 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.routers import auth, trainer
+from app.routers import auth, perfil, trainer
+
+class StaticFilesSinCache(StaticFiles):
+    """Obliga al navegador a revalidar los archivos del frontend en cada carga."""
+
+    async def get_response(self, path, scope):
+        respuesta = await super().get_response(path, scope)
+        respuesta.headers["Cache-Control"] = "no-cache"
+        return respuesta
+
 
 app = FastAPI(title="Fitness App")
 
 app.include_router(auth.router)
+app.include_router(perfil.router)
 app.include_router(trainer.router)
+
 
 
 @app.get("/health")
@@ -28,6 +39,6 @@ def health(db: Session = Depends(get_db)):
 # Debe ir al final: sirve el frontend desde "/"
 app.mount(
     "/",
-    StaticFiles(directory=Path(__file__).parent / "static", html=True),
+    StaticFilesSinCache(directory=Path(__file__).parent / "static", html=True),
     name="static",
 )

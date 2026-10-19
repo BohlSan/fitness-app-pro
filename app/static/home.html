@@ -10,19 +10,72 @@
   <main class="pantalla">
     <h1 id="saludo">Hola</h1>
     <p class="subtitulo" id="rol"></p>
-    <p>Home provisorio. El formulario de perfil llega en la Etapa 2.</p>
+    <p class="subtitulo" id="nota-rol"></p>
+    <ul id="resumen-perfil" class="resumen oculto"></ul>
+    <p class="mensaje-error" id="error"></p>
+    <p>Home provisorio. Las rutinas y los entrenamientos llegan en las próximas etapas.</p>
     <button class="boton secundario" id="salir">Cerrar sesión</button>
   </main>
-  <script src="/js/api.js"></script>
+  <script src="/js/api.js?v=3"></script>
   <script>
     requerirSesion();
 
     const etiquetas = { USUARIO: "Usuario Particular", PERSONAL_TRAINER: "Personal Trainer" };
 
-    apiFetch("/auth/me").then((usuario) => {
-      document.getElementById("saludo").textContent = "Hola, " + usuario.nombre;
-      document.getElementById("rol").textContent = etiquetas[usuario.rol] || "";
-    });
+    function mostrarResumen(perfil) {
+      const lista = document.getElementById("resumen-perfil");
+      const hidratacion = perfil.unidad_hidratacion === "BOTELLAS"
+        ? `Botellas de ${perfil.ml_botella} ml`
+        : "Mililitros";
+      const filas = [
+        ["Edad", `${perfil.edad} años`],
+        ["Altura", `${perfil.altura_cm} cm`],
+        ["Peso", `${perfil.peso_actual_kg} kg`],
+        ["Objetivo", ETIQUETAS_OBJETIVO[perfil.objetivo]],
+        ["Entrenamientos por semana", perfil.dias_entrenamiento_semana],
+        ["Hidratación", hidratacion],
+      ];
+      filas.forEach(([nombre, dato]) => {
+        const item = document.createElement("li");
+        item.textContent = `${nombre}: ${dato}`;
+        lista.appendChild(item);
+      });
+      lista.classList.remove("oculto");
+    }
+
+    async function cargarHome() {
+      const error = document.getElementById("error");
+      try {
+        const usuario = await apiFetch("/auth/me");
+        document.getElementById("saludo").textContent = "Hola, " + usuario.nombre;
+        document.getElementById("rol").textContent = etiquetas[usuario.rol] || "";
+
+        if (usuario.rol !== "USUARIO") {
+          document.getElementById("nota-rol").textContent =
+            "Ingresaste como Personal Trainer. Tu panel de clientes se habilita en una próxima etapa.";
+          return;
+        }
+
+        let perfil;
+        try {
+          perfil = await apiFetch("/perfil");
+        } catch (e) {
+          // Perfil sin completar: ir al formulario
+          if (e.status === 404) {
+            window.location.href = "/formulario.html";
+            return;
+          }
+          throw e;
+        }
+        mostrarResumen(perfil);
+      } catch (e) {
+        // Antes este error se perdía en silencio
+        error.textContent = e.message || "No pudimos cargar tu información.";
+        console.error(e);
+      }
+    }
+
+    cargarHome();
 
     document.getElementById("salir").addEventListener("click", cerrarSesion);
   </script>

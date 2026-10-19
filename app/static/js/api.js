@@ -28,8 +28,8 @@ function requerirSesion() {
 }
 
 function mensajeDeError(status, datos) {
-  if (status === 422) return "Revisá los datos ingresados.";
   if (datos && typeof datos.detail === "string") return datos.detail;
+  if (status === 422) return "Revisá los datos ingresados.";
   return "Ocurrió un error. Intentá de nuevo.";
 }
 
@@ -52,11 +52,41 @@ async function apiFetch(ruta, { method = "GET", body } = {}) {
   }
 
   if (!respuesta.ok) {
-    // Sesión vencida: volver al login
+    // Sesión vencida: volver al inicio
     if (respuesta.status === 401 && token) {
       cerrarSesion();
     }
-    throw new Error(mensajeDeError(respuesta.status, datos));
+    const error = new Error(mensajeDeError(respuesta.status, datos));
+    error.status = respuesta.status;
+    throw error;
   }
   return datos;
 }
+
+// Único lugar que decide a dónde va una persona recién autenticada:
+// - Personal Trainer: Home
+// - Usuario particular con perfil completo: Home
+// - Usuario particular sin perfil: formulario
+async function irAlDestino(usuario) {
+  if (!usuario || usuario.rol !== "USUARIO") {
+    window.location.href = "/home.html";
+    return;
+  }
+  try {
+    await apiFetch("/perfil");
+    window.location.href = "/home.html";
+  } catch (e) {
+    if (e.status === 404) {
+      window.location.href = "/formulario.html";
+      return;
+    }
+    throw e;
+  }
+}
+
+const ETIQUETAS_OBJETIVO = {
+  PERDER_PESO: "Perder peso",
+  GANAR_MASA_MUSCULAR: "Ganar masa muscular",
+  MANTENER_PESO: "Mantener peso",
+  MEJORAR_RENDIMIENTO: "Mejorar rendimiento",
+};

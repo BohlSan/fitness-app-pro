@@ -1,0 +1,169 @@
+.fondo-formulario {
+  background: linear-gradient(180deg, #dff0e6 0%, var(--fondo) 340px);
+  min-height: 100vh;
+}
+
+.wizard {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 22px 16px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.wizard-marca {
+  margin: 0 0 14px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--acento);
+}
+
+/* ---------- Barra de progreso ---------- */
+.progreso-barra {
+  height: 8px;
+  border-radius: 999px;
+  background: #cfe3d7;
+  overflow: hidden;
+}
+.progreso-relleno {
+  height: 100%;
+  width: 33.33%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #35a972, var(--acento));
+  transition: width 0.4s ease;
+}
+.progreso-pasos {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  justify-content: space-between;
+}
+.progreso-pasos li {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  color: #7a8791;
+}
+.progreso-pasos li:nth-child(2) { justify-content: center; }
+.progreso-pasos li:last-child { justify-content: flex-end; }
+.progreso-pasos .num {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #cfe3d7;
+  color: #4a5a52;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+.progreso-pasos li.activo { color: var(--texto); font-weight: 600; }
+.progreso-pasos li.activo .num,
+.progreso-pasos li.completo .num { background: var(--acento); color: #fff; }
+
+@media (max-width: 440px) {
+  .progreso-pasos .nombre { display: none; }
+  .progreso-pasos li.activo .nombre { display: inline; }
+}
+
+/* ---------- Tarjeta ---------- */
+.wizard-tarjeta {
+  background: var(--tarjeta);
+  border-radius: 22px;
+  padding: 26px 22px;
+  box-shadow: 0 10px 30px rgba(20, 40, 30, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.encabezado-paso h1 { margin: 0 0 4px; font-size: 1.55rem; }
+.encabezado-paso p { margin: 0; color: var(--texto-suave); }
+
+.paso {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  animation: aparecer 0.3s ease;
+}
+@keyframes aparecer {
+  from { opacity: 0; transform: translateX(14px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---------- Campos ---------- */
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+.campo small { font-weight: 400; color: var(--texto-suave); }
+
+fieldset.campo { display: block; border: 0; padding: 0; margin: 0; min-width: 0; }
+fieldset.campo > legend { padding: 0; margin-bottom: 8px; font-weight: 600; font-size: 0.92rem; }
+
+.invalido { border-color: var(--error) !important; box-shadow: 0 0 0 3px rgba(179, 38, 30, 0.12) !important; }
+
+.input-unidad { position: relative; display: block; }
+.input-unidad input { width: 100%; padding-right: 56px; }
+.input-unidad > span {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--texto-suave);
+  font-weight: 500;
+  pointer-events: none;
+}
+
+/* ---------- Opciones tipo tarjeta (radios) ---------- */
+.opciones { display: grid; gap: 10px; }
+.opciones.dos { grid-template-columns: repeat(2, 1fr); }
+.opciones.tres { grid-template-columns: repeat(3, 1fr); }
+.opciones.dias { grid-template-columns: repeat(7, 1fr); gap: 6px; }
+
+.opcion { position: relative; display: block; font-size: 0.92rem; }
+.opcion input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.opcion > span {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 52px;
+  padding: 10px 6px;
+  border: 2px solid var(--borde);
+  border-radius: 14px;
+  background: #fff;
+  font-weight: 600;
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.opcion:hover > span { border-color: #9bc9b0; }
+.opcion input:checked + span {
+  border-color: var(--acento);
+  background: var(--acento-claro);
+  color: var(--acento);
+  box-shadow: 0 0 0 3px rgba(31, 122, 77, 0.12);
+}
+.opcion input:focus-visible + span { outline: 3px solid rgba(31, 122, 77, 0.35); outline-offset: 2px; }
+.opcion .icono { font-size: 1.4rem; line-height: 1; }
+.opciones.dias .opcion > span { min-height: 46px; padding: 8px 0; border-radius: 12px; }
+
+/* ---------- Botones y pie ---------- */
+.acciones-wizard { display: flex; gap: 10px; margin-top: 4px; }
+.acciones-wizard .boton { flex: 1; }
+.pie-wizard { margin: 0; text-align: center; font-size: 0.82rem; color: var(--texto-suave); }

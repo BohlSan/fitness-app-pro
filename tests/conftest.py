@@ -49,3 +49,21 @@ def client(db):
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+
+
+def _crear_cuenta(client, email, rol):
+    respuesta = client.post(
+        "/auth/registro",
+        json={"nombre": "Test", "email": email, "password": "secreta123", "rol": rol},
+    )
+    return {"Authorization": f"Bearer {respuesta.json()['access_token']}"}
+
+
+@pytest.fixture()
+def headers_usuario(client):
+    return _crear_cuenta(client, "usuario@example.com", "USUARIO")
+
+
+@pytest.fixture()
+def headers_trainer(client):
+    return _crear_cuenta(client, "trainer@example.com", "PERSONAL_TRAINER")

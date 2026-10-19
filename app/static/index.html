@@ -14,9 +14,17 @@
     <a class="boton" href="/seleccion-perfil.html">Registrarse con Mail</a>
     <a class="boton secundario" href="/login.html">Iniciar sesión</a>
   </main>
-  <script src="/js/api.js"></script>
+  <script src="/js/api.js?v=3"></script>
   <script>
-    if (obtenerToken()) window.location.href = "/home.html";
+    // Si ya hay sesión iniciada, ir directo al destino que corresponda
+    (async () => {
+      if (!obtenerToken()) return;
+      try {
+        await irAlDestino(obtenerUsuario());
+      } catch (e) {
+        // si algo falla, la persona se queda en la landing
+      }
+    })();
   </script>
 </body>
 </html>
