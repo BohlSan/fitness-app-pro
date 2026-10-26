@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrenar</title>
+  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/ejercicios.css?v=1">
+  <link rel="stylesheet" href="/css/rutinas.css?v=1">
+</head>
+<body>
+  <main class="pagina">
+    <a class="enlace-volver" href="/home.html">← Volver al inicio</a>
+    <div class="pagina-cabecera">
+      <h1>Entrenar</h1>
+    </div>
+
+    <p class="estado-lista" id="estado" role="status">Cargando…</p>
+    <div class="lista-rutinas" id="lista-rutinas"></div>
+
+    <div class="acciones-entrenar">
+      <a class="boton" href="/rutina.html">Nueva rutina</a>
+      <button type="button" class="boton secundario" disabled title="Disponible en la próxima etapa">Estilo libre</button>
+    </div>
+  </main>
+
+  <script src="/js/api.js?v=3"></script>
+  <script src="/js/ejercicios-ui.js?v=1"></script>
+  <script src="/js/rutinas-comun.js?v=1"></script>
+  <script>
+    requerirSesion();
+
+    const lista = document.getElementById("lista-rutinas");
+    const estado = document.getElementById("estado");
+
+    function tarjeta(rutina) {
+      const totalEjercicios = rutina.dias.reduce((suma, dia) => suma + dia.ejercicios.length, 0);
+
+      const enlace = document.createElement("a");
+      enlace.className = "rutina-card";
+      enlace.href = `/rutina.html?id=${rutina.id}`;
+
+      const titulo = document.createElement("h2");
+      titulo.textContent = rutina.nombre;
+      enlace.append(titulo);
+
+      if (rutina.descripcion) {
+        const descripcion = document.createElement("p");
+        descripcion.className = "rutina-meta";
+        descripcion.textContent = rutina.descripcion;
+        enlace.append(descripcion);
+      }
+
+      const dias = document.createElement("div");
+      dias.className = "ejercicio-tags";
+      rutina.dias.forEach((dia) => dias.append(crearTag(etiquetaDiaCorta(dia.dia_semana), "principal")));
+      enlace.append(dias);
+
+      const meta = document.createElement("p");
+      meta.className = "rutina-meta";
+      meta.textContent =
+        `${rutina.dias.length} día${rutina.dias.length === 1 ? "" : "s"} · ` +
+        `${totalEjercicios} ejercicio${totalEjercicios === 1 ? "" : "s"}`;
+      enlace.append(meta);
+
+      return enlace;
+    }
+
+    (async () => {
+      try {
+        const rutinas = await apiFetch("/rutinas");
+        rutinas.forEach((rutina) => lista.append(tarjeta(rutina)));
+        estado.textContent = rutinas.length ? "" : "Todavía no tenés rutinas. ¡Creá la primera!";
+      } catch (e) {
+        estado.textContent = e.message;
+      }
+    })();
+  </script>
+</body>
+</html>

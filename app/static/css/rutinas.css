@@ -1,0 +1,77 @@
+/* ---------- Lista de rutinas (Entrenar) ---------- */
+.lista-rutinas { display: flex; flex-direction: column; gap: 12px; }
+.rutina-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.rutina-card:hover { border-color: var(--acento); box-shadow: 0 6px 18px rgba(31, 122, 77, 0.12); }
+.rutina-card h2 { margin: 0; font-size: 1.1rem; }
+.rutina-meta { margin: 0; color: var(--texto-suave); font-size: 0.88rem; }
+.acciones-entrenar { display: flex; flex-direction: column; gap: 10px; }
+
+/* ---------- Editor de rutina ---------- */
+.bloque {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.subtitulo-bloque { margin: 0; font-size: 1.05rem; }
+.campo-simple { display: flex; flex-direction: column; gap: 6px; font-size: 0.9rem; font-weight: 600; }
+
+.barra-dias { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.tab {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 2px solid var(--borde);
+  background: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+.tab.activa { border-color: var(--acento); background: var(--acento-claro); color: var(--acento); }
+.agregar-dia { display: flex; gap: 6px; align-items: center; }
+.agregar-dia select { padding: 8px; }
+
+#panel-dia { display: flex; flex-direction: column; gap: 12px; }
+
+.ej-tarjeta {
+  border: 1px solid var(--borde);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: #fafbfc;
+}
+.ej-cabecera { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.ej-cabecera strong { display: block; margin-bottom: 4px; }
+.ej-botones { display: flex; gap: 4px; flex-shrink: 0; }
+.boton-icono {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--borde);
+  background: #fff;
+  cursor: pointer;
+}
+.boton-icono:disabled { opacity: 0.35; cursor: not-allowed; }
+.boton-icono.peligro { color: var(--error); }
+
+.ej-campos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+@media (max-width: 560px) { .ej-campos { grid-template-columns: repeat(2, 1fr); } }
+.campo-chico { display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; font-weight: 600; color: var(--texto-suave); }
+.campo-chico input { padding: 8px; width: 100%; }
+
+.barra-guardar { display: flex; flex-direction: column; gap: 10px; }

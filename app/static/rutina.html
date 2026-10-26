@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rutina</title>
+  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/ejercicios.css?v=1">
+  <link rel="stylesheet" href="/css/rutinas.css?v=1">
+</head>
+<body>
+  <main class="pagina">
+    <a class="enlace-volver" href="/entrenar.html">← Volver a Entrenar</a>
+    <h1 id="titulo-pagina">Nueva rutina</h1>
+
+    <section class="bloque">
+      <label class="campo-simple">Nombre de la rutina
+        <input type="text" id="nombre" maxlength="100" placeholder="Ej: Hipertrofia 4 días">
+      </label>
+      <label class="campo-simple">Descripción (opcional)
+        <textarea id="descripcion" rows="2" maxlength="500"></textarea>
+      </label>
+    </section>
+
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Días de entrenamiento</h2>
+      <div class="barra-dias">
+        <div class="tabs" id="tabs-dias"></div>
+        <div class="agregar-dia" id="agregar-dia">
+          <select id="select-dia" aria-label="Día de la semana"></select>
+          <button type="button" class="boton-chico" id="btn-agregar-dia">+ Agregar día</button>
+        </div>
+      </div>
+      <div id="panel-dia"></div>
+    </section>
+
+    <p class="mensaje-error" id="error" role="alert"></p>
+
+    <div class="barra-guardar">
+      <button type="button" class="boton" id="guardar">Guardar rutina</button>
+      <button type="button" class="boton secundario" id="iniciar" disabled title="Disponible en la próxima etapa">Iniciar rutina</button>
+      <button type="button" class="boton-chico peligro oculto" id="eliminar">Eliminar rutina</button>
+    </div>
+  </main>
+
+  <script src="/js/api.js?v=3"></script>
+  <script src="/js/ejercicios-ui.js?v=1"></script>
+  <script src="/js/rutinas-comun.js?v=1"></script>
+  <script src="/js/rutina-editor.js?v=1"></script>
+</body>
+</html>

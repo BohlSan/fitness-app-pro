@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ejercicios</title>
+  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/ejercicios.css?v=1">
+</head>
+<body>
+  <main class="pagina">
+    <a class="enlace-volver" href="/home.html">← Volver al inicio</a>
+    <div class="pagina-cabecera">
+      <h1>Ejercicios</h1>
+      <button class="boton" id="nuevo" type="button">Nuevo ejercicio</button>
+    </div>
+    <div id="buscador"></div>
+  </main>
+
+  <dialog class="dialogo" id="dialogo-ejercicio">
+    <div class="dialogo-cabecera">
+      <h2 id="dialogo-titulo">Nuevo ejercicio</h2>
+      <button type="button" class="cerrar" id="cerrar-dialogo" aria-label="Cerrar">×</button>
+    </div>
+    <form class="dialogo-cuerpo" id="form-ejercicio" novalidate>
+      <label>Nombre
+        <input type="text" id="nombre" maxlength="100">
+      </label>
+      <label>Descripción (opcional)
+        <textarea id="descripcion" rows="3" maxlength="500"></textarea>
+      </label>
+      <label>Grupo muscular principal
+        <select id="grupo_principal"></select>
+      </label>
+      <label>Grupo muscular secundario (opcional)
+        <select id="grupo_secundario"></select>
+      </label>
+      <p class="mensaje-error" id="error-form" role="alert"></p>
+      <button type="submit" class="boton" id="guardar">Guardar</button>
+    </form>
+  </dialog>
+
+  <script src="/js/api.js?v=3"></script>
+  <script src="/js/ejercicios-ui.js?v=1"></script>
+  <script>
+    requerirSesion();
+    const usuario = obtenerUsuario();
+
+    const dialogo = document.getElementById("dialogo-ejercicio");
+    const formulario = document.getElementById("form-ejercicio");
+    const campoNombre = document.getElementById("nombre");
+    const campoDescripcion = document.getElementById("descripcion");
+    const selectPrincipal = document.getElementById("grupo_principal");
+    const selectSecundario = document.getElementById("grupo_secundario");
+    const errorForm = document.getElementById("error-form");
+    const botonGuardar = document.getElementById("guardar");
+
+    let buscador = null;
+    let editandoId = null;
+
+    function llenarSelect(select, grupos, textoVacio) {
+      select.replaceChildren();
+      if (textoVacio) {
+        const vacia = document.createElement("option");
+        vacia.value = "";
+        vacia.textContent = textoVacio;
+        select.appendChild(vacia);
+      }
+      grupos.forEach((grupo) => {
+        const opcion = document.createElement("option");
+        opcion.value = grupo.valor;
+        opcion.textContent = grupo.etiqueta;
+        select.appendChild(opcion);
+      });
+    }
+
+    function abrirFormulario(ejercicio = null) {
+      editandoId = ejercicio ? ejercicio.id : null;
+      document.getElementById("dialogo-titulo").textContent =
+        ejercicio ? "Editar ejercicio" : "Nuevo ejercicio";
+      campoNombre.value = ejercicio ? ejercicio.nombre : "";
+      campoDescripcion.value = ejercicio && ejercicio.descripcion ? ejercicio.descripcion : "";
+      selectPrincipal.value = ejercicio ? ejercicio.grupo_principal : selectPrincipal.options[0].value;
+      selectSecundario.value = ejercicio && ejercicio.grupo_secundario ? ejercicio.grupo_secundario : "";
+      errorForm.textContent = "";
+      dialogo.showModal();
+      campoNombre.focus();
+    }
+
+    function botonChico(texto, accion) {
+      const boton = document.createElement("button");
+      boton.type = "button";
+      boton.className = "boton-chico";
+      boton.textContent = texto;
+      boton.addEventListener("click", accion);
+      return boton;
+    }
+
+    async function eliminar(ejercicio) {
+      if (!window.confirm(`¿Eliminar "${ejercicio.nombre}"?`)) return;
+      try {
+        await apiFetch(`/ejercicios/${ejercicio.id}`, { method: "DELETE" });
+        await buscador.recargar();
+      } catch (e) {
+        window.alert(e.message);
+      }
+    }
+
+    // Solo los ejercicios propios tienen botones de editar y eliminar
+    function acciones(ejercicio) {
+      if (ejercicio.creador_id !== usuario.id) return null;
+      const caja = document.createElement("div");
+      caja.className = "ejercicio-acciones";
+      const borrar = botonChico("Eliminar", () => eliminar(ejercicio));
+      borrar.classList.add("peligro");
+      caja.append(botonChico("Editar", () => abrirFormulario(ejercicio)), borrar);
+      return caja;
+    }
+
+    formulario.addEventListener("submit", async (evento) => {
+      evento.preventDefault();
+      errorForm.textContent = "";
+
+      const nombre = campoNombre.value.trim();
+      if (!nombre) {
+        errorForm.textContent = "Ingresá el nombre del ejercicio.";
+        campoNombre.focus();
+        return;
+      }
+      if (selectSecundario.value && selectSecundario.value === selectPrincipal.value) {
+        errorForm.textContent = "El grupo secundario debe ser distinto del principal.";
+        return;
+      }
+
+      const cuerpo = {
+        nombre: nombre,
+        descripcion: campoDescripcion.value.trim() || null,
+        grupo_principal: selectPrincipal.value,
+        grupo_secundario: selectSecundario.value || null,
+      };
+
+      botonGuardar.disabled = true;
+      try {
+        if (editandoId) {
+          await apiFetch(`/ejercicios/${editandoId}`, { method: "PATCH", body: cuerpo });
+        } else {
+          await apiFetch("/ejercicios", { method: "POST", body: cuerpo });
+        }
+        dialogo.close();
+        await buscador.recargar();
+      } catch (e) {
+        errorForm.textContent = e.message;
+      } finally {
+        botonGuardar.disabled = false;
+      }
+    });
+
+    document.getElementById("nuevo").addEventListener("click", () => abrirFormulario());
+    document.getElementById("cerrar-dialogo").addEventListener("click", () => dialogo.close());
+    dialogo.addEventListener("click", (evento) => {
+      if (evento.target === dialogo) dialogo.close();
+    });
+
+    (async () => {
+      const grupos = await obtenerGrupos();
+      llenarSelect(selectPrincipal, grupos);
+      llenarSelect(selectSecundario, grupos, "Ninguno");
+      buscador = await crearBuscadorEjercicios(document.getElementById("buscador"), {
+        renderAcciones: acciones,
+      });
+    })();
+  </script>
+</body>
+</html>

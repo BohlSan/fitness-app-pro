@@ -67,3 +67,8 @@ def headers_usuario(client):
 @pytest.fixture()
 def headers_trainer(client):
     return _crear_cuenta(client, "trainer@example.com", "PERSONAL_TRAINER")
+
+
+@pytest.fixture()
+def headers_otro_usuario(client):
+    return _crear_cuenta(client, "otro@example.com", "USUARIO")

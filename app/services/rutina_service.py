@@ -1,0 +1,142 @@
+from sqlalchemy import select
+from sqlalchemy.orm import Session, joinedload, selectinload
+
+from app.models.rutina import DiaRutina, Rutina, RutinaEjercicio
+from app.models.usuario import Usuario
+from app.schemas.rutina import EjercicioRutinaIn, RutinaIn
+from app.services import auditoria_service, ejercicio_service
+
+
+class RutinaNoEncontrada(Exception):
+    pass
+
+
+class DatosRutinaInvalidos(Exception):
+    pass
+
+
+def _consulta():
+    """Rutina con sus días, ejercicios y datos del ejercicio, en pocas consultas."""
+    return select(Rutina).options(
+        selectinload(Rutina.dias)
+        .selectinload(DiaRutina.ejercicios)
+        .joinedload(RutinaEjercicio.ejercicio)
+    )
+
+
+def _puede_acceder(usuario: Usuario, rutina: Rutina) -> bool:
+    # Hoy solo el propietario. En la Etapa 9 se suma el trainer autorizado (RF-09)
+    return rutina.propietario_id == usuario.id
+
+
+def listar_rutinas(db: Session, usuario: Usuario) -> list[Rutina]:
+    consulta = _consulta().where(Rutina.propietario_id == usuario.id).order_by(Rutina.id.desc())
+    return list(db.scalars(consulta))
+
+
+def obtener_rutina(db: Session, usuario: Usuario, rutina_id: int) -> Rutina:
+    rutina = db.scalar(
+        _consulta().where(Rutina.id == rutina_id).execution_options(populate_existing=True)
+    )
+    # La rutina de otra persona se trata como inexistente (RNF-15)
+    if rutina is None or not _puede_acceder(usuario, rutina):
+        raise RutinaNoEncontrada()
+    return rutina
+
+
+def _validar_ejercicios(db: Session, usuario: Usuario, rutina: Rutina, datos: RutinaIn) -> None:
+    pedidos = {e.ejercicio_id for dia in datos.dias for e in dia.ejercicios}
+    ya_usados = {item.ejercicio_id for dia in rutina.dias for item in dia.ejercicios}
+    # Los que ya estaban en la rutina se conservan; solo se validan los nuevos
+    nuevos = pedidos - ya_usados
+    if nuevos - ejercicio_service.ids_ejercicios_visibles(db, usuario, nuevos):
+        raise DatosRutinaInvalidos("Alguno de los ejercicios elegidos no existe")
+
+
+def _sincronizar_ejercicios(dia: DiaRutina, ejercicios_in: list[EjercicioRutinaIn]) -> None:
+    actuales = {item.id: item for item in dia.ejercicios}
+    conservados = {e.id for e in ejercicios_in if e.id is not None}
+    if not conservados.issubset(actuales):
+        raise DatosRutinaInvalidos("Uno de los ejercicios no pertenece a esta rutina")
+
+    for item in list(dia.ejercicios):
+        if item.id not in conservados:
+            dia.ejercicios.remove(item)  # delete-orphan lo borra
+
+    for posicion, ejercicio_in in enumerate(ejercicios_in):
+        if ejercicio_in.id is None:
+            item = RutinaEjercicio()
+            dia.ejercicios.append(item)
+        else:
+            item = actuales[ejercicio_in.id]
+        item.ejercicio_id = ejercicio_in.ejercicio_id
+        item.orden = posicion
+        item.series = ejercicio_in.series
+        item.repeticiones = ejercicio_in.repeticiones
+        item.peso_sugerido_kg = ejercicio_in.peso_sugerido_kg
+        item.descanso_segundos = ejercicio_in.descanso_segundos
+
+
+def _sincronizar_dias(rutina: Rutina, dias_in) -> None:
+    actuales = {dia.id: dia for dia in rutina.dias}
+    conservados = {d.id for d in dias_in if d.id is not None}
+    if not conservados.issubset(actuales):
+        raise DatosRutinaInvalidos("Uno de los días no pertenece a esta rutina")
+
+    for dia in list(rutina.dias):
+        if dia.id not in conservados:
+            rutina.dias.remove(dia)
+
+    for dia_in in dias_in:
+        if dia_in.id is None:
+            dia = DiaRutina()
+            rutina.dias.append(dia)
+        else:
+            dia = actuales[dia_in.id]
+        dia.dia_semana = dia_in.dia_semana
+        dia.nombre = dia_in.nombre
+        _sincronizar_ejercicios(dia, dia_in.ejercicios)
+
+
+def _sincronizar(db: Session, usuario: Usuario, rutina: Rutina, datos: RutinaIn) -> None:
+    try:
+        _validar_ejercicios(db, usuario, rutina, datos)
+        _sincronizar_dias(rutina, datos.dias)
+    except DatosRutinaInvalidos:
+        db.rollback()  # RNF-14: no dejar cambios a medias
+        raise
+
+
+def crear_rutina(db: Session, usuario: Usuario, datos: RutinaIn) -> Rutina:
+    rutina = Rutina(
+        nombre=datos.nombre,
+        descripcion=datos.descripcion,
+        autor_id=usuario.id,
+        propietario_id=usuario.id,
+    )
+    _sincronizar(db, usuario, rutina, datos)
+    db.add(rutina)
+    db.flush()
+    rutina_id = rutina.id
+    auditoria_service.registrar(db, usuario, "CREAR_RUTINA", "rutina", rutina_id)
+    db.commit()
+    return obtener_rutina(db, usuario, rutina_id)
+
+
+def actualizar_rutina(
+    db: Session, usuario: Usuario, rutina_id: int, datos: RutinaIn
+) -> Rutina:
+    rutina = obtener_rutina(db, usuario, rutina_id)
+    rutina.nombre = datos.nombre
+    rutina.descripcion = datos.descripcion
+    _sincronizar(db, usuario, rutina, datos)
+    auditoria_service.registrar(db, usuario, "MODIFICAR_RUTINA", "rutina", rutina_id)
+    db.commit()
+    return obtener_rutina(db, usuario, rutina_id)
+
+
+def eliminar_rutina(db: Session, usuario: Usuario, rutina_id: int) -> None:
+    rutina = obtener_rutina(db, usuario, rutina_id)
+    auditoria_service.registrar(db, usuario, "ELIMINAR_RUTINA", "rutina", rutina_id)
+    db.delete(rutina)
+    db.commit()
