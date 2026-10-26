@@ -1,5 +1,11 @@
 from app.models.auditoria import RegistroAuditoria
 from app.models.ejercicio import Ejercicio, GrupoMuscular
+from app.models.entrenamiento import (
+    EjercicioEntrenamiento,
+    Entrenamiento,
+    EstadoEntrenamiento,
+    Serie,
+)
 from app.models.perfil import (
     Genero,
     ObjetivoFisico,
@@ -13,7 +19,10 @@ from app.models.usuario import RolUsuario, Usuario
 __all__ = [
     "DiaRutina",
     "DiaSemana",
+    "EjercicioEntrenamiento",
     "Ejercicio",
+    "Entrenamiento",
+    "EstadoEntrenamiento",
     "Genero",
     "GrupoMuscular",
     "ObjetivoFisico",
@@ -23,6 +32,7 @@ __all__ = [
     "RolUsuario",
     "Rutina",
     "RutinaEjercicio",
+    "Serie",
     "UnidadHidratacion",
     "Usuario",
 ]

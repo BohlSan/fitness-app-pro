@@ -100,6 +100,6 @@ def eliminar(
     except ejercicio_service.EjercicioEnUso:
         raise HTTPException(
             status_code=409,
-            detail="No se puede eliminar: el ejercicio está en una o más rutinas",
-        )
+            detail="No se puede eliminar: el ejercicio está en una rutina o en un entrenamiento",
+            )
     return Response(status_code=status.HTTP_204_NO_CONTENT)

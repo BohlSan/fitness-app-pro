@@ -72,3 +72,25 @@ def headers_trainer(client):
 @pytest.fixture()
 def headers_otro_usuario(client):
     return _crear_cuenta(client, "otro@example.com", "USUARIO")
+
+
+@pytest.fixture()
+def ejercicios(db):
+    """Tres ejercicios del catálogo. Devuelve sus ids."""
+    from app.models.ejercicio import GrupoMuscular
+    from app.schemas.ejercicio import EjercicioCreate
+    from app.services.ejercicio_factory import EjercicioFactory
+
+    ids = []
+    for nombre, grupo in [
+        ("Press de banca", GrupoMuscular.PECHO),
+        ("Aperturas", GrupoMuscular.PECHO),
+        ("Dominadas", GrupoMuscular.ESPALDA),
+    ]:
+        ejercicio = EjercicioFactory.crear_base(
+            EjercicioCreate(nombre=nombre, grupo_principal=grupo)
+        )
+        db.add(ejercicio)
+        db.commit()
+        ids.append(ejercicio.id)
+    return ids

@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/css/styles.css?v=4">
   <link rel="stylesheet" href="/css/ejercicios.css?v=1">
   <link rel="stylesheet" href="/css/rutinas.css?v=1">
+  <link rel="stylesheet" href="/css/entrenamiento.css?v=1">
 </head>
 <body>
   <main class="pagina">
@@ -15,12 +16,20 @@
       <h1>Entrenar</h1>
     </div>
 
+    <div class="banner-en-curso oculto" id="banner-en-curso">
+      <div>
+        <strong>Tenés un entrenamiento en curso</strong>
+        <p class="rutina-meta" id="banner-titulo"></p>
+      </div>
+      <a class="boton" id="banner-continuar" href="#">Continuar</a>
+    </div>
+
     <p class="estado-lista" id="estado" role="status">Cargando…</p>
     <div class="lista-rutinas" id="lista-rutinas"></div>
 
     <div class="acciones-entrenar">
       <a class="boton" href="/rutina.html">Nueva rutina</a>
-      <button type="button" class="boton secundario" disabled title="Disponible en la próxima etapa">Estilo libre</button>
+      <button type="button" class="boton secundario" id="estilo-libre">Estilo libre</button>
     </div>
   </main>
 
@@ -66,7 +75,25 @@
       return enlace;
     }
 
+    async function mostrarEntrenamientoEnCurso() {
+      const enCurso = await apiFetch("/entrenamientos/en-curso");
+      if (!enCurso) return;
+      document.getElementById("banner-titulo").textContent = enCurso.titulo;
+      document.getElementById("banner-continuar").href = `/entrenamiento.html?id=${enCurso.id}`;
+      document.getElementById("banner-en-curso").classList.remove("oculto");
+    }
+
+    document.getElementById("estilo-libre").addEventListener("click", async () => {
+      try {
+        const nuevo = await apiFetch("/entrenamientos", { method: "POST", body: {} });
+        window.location.href = `/entrenamiento.html?id=${nuevo.id}`;
+      } catch (e) {
+        estado.textContent = e.message;
+      }
+    });
+
     (async () => {
+      mostrarEntrenamientoEnCurso().catch(() => {});
       try {
         const rutinas = await apiFetch("/rutinas");
         rutinas.forEach((rutina) => lista.append(tarjeta(rutina)));

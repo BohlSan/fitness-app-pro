@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrenamiento</title>
+  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/ejercicios.css?v=1">
+  <link rel="stylesheet" href="/css/rutinas.css?v=1">
+  <link rel="stylesheet" href="/css/entrenamiento.css?v=1">
+</head>
+<body>
+  <!-- Vista: entrenamiento en curso -->
+  <main class="pagina" id="vista-entrenamiento">
+    <a class="enlace-volver" href="/entrenar.html">← Entrenar</a>
+    <header class="cabecera-entreno">
+      <h1 id="titulo">Entrenamiento</h1>
+      <div class="cronometro" id="cronometro">00:00</div>
+    </header>
+    <p class="estado-guardado" id="estado-guardado" role="status"></p>
+
+    <div id="lista-ejercicios" class="lista-rutinas"></div>
+    <button type="button" class="boton secundario" id="agregar-ejercicio">+ Agregar ejercicio</button>
+
+    <p class="mensaje-error" id="error" role="alert"></p>
+    <div class="barra-guardar">
+      <button type="button" class="boton" id="terminar">Terminar rutina</button>
+      <button type="button" class="boton-chico peligro" id="descartar">Descartar entrenamiento</button>
+    </div>
+  </main>
+
+  <!-- Vista: resumen al terminar -->
+  <main class="pagina oculto" id="vista-resumen">
+    <h1>¡Entrenamiento terminado!</h1>
+    <p class="subtitulo" id="resumen-titulo"></p>
+    <div class="resumen-grid" id="resumen-datos"></div>
+    <div class="ejercicio-tags" id="resumen-musculos"></div>
+    <div class="emojis-estado" id="resumen-estado"></div>
+    <ul class="resumen-lista" id="resumen-ejercicios"></ul>
+    <a class="boton" href="/entrenar.html">Volver a Entrenar</a>
+  </main>
+
+  <!-- Cierre: agua, dificultad, cansancio y ánimo -->
+  <dialog class="dialogo" id="dialogo-finalizar">
+    <div class="dialogo-cabecera">
+      <h2>Terminar entrenamiento</h2>
+      <button type="button" class="cerrar" id="cerrar-finalizar" aria-label="Cerrar">×</button>
+    </div>
+    <form class="dialogo-cuerpo" id="form-finalizar" novalidate>
+      <p class="aviso" id="aviso-series"></p>
+
+      <fieldset class="grupo-campo">
+        <legend>¿Cuánta agua tomaste? (opcional)</legend>
+        <div class="chips" id="agua-opciones"></div>
+        <p class="rutina-meta" id="agua-total"></p>
+      </fieldset>
+
+      <fieldset class="grupo-campo">
+        <legend>Dificultad (opcional)</legend>
+        <div class="rating" id="rating-dificultad"></div>
+      </fieldset>
+
+      <fieldset class="grupo-campo">
+        <legend>Cansancio (opcional)</legend>
+        <div class="caritas" id="caritas-cansancio"></div>
+      </fieldset>
+
+      <fieldset class="grupo-campo">
+        <legend>Estado de ánimo (opcional)</legend>
+        <div class="caritas" id="caritas-animo"></div>
+      </fieldset>
+
+      <p class="mensaje-error" id="error-finalizar" role="alert"></p>
+      <button type="submit" class="boton" id="confirmar-finalizar">Guardar y terminar</button>
+    </form>
+  </dialog>
+
+  <script src="/js/api.js?v=3"></script>
+  <script src="/js/ejercicios-ui.js?v=1"></script>
+  <script src="/js/entrenamiento.js?v=1"></script>
+</body>
+</html>

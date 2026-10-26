@@ -7,7 +7,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.routers import auth, ejercicios, perfil, rutinas, trainer
+from app.routers import auth, ejercicios, entrenamientos, perfil, rutinas, trainer
 
 class StaticFilesSinCache(StaticFiles):
     """Obliga al navegador a revalidar los archivos del frontend en cada carga."""
@@ -24,6 +24,7 @@ app.include_router(auth.router)
 app.include_router(perfil.router)
 app.include_router(ejercicios.router)
 app.include_router(rutinas.router)
+app.include_router(entrenamientos.router)
 app.include_router(trainer.router)
 
 

@@ -2,6 +2,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.models.ejercicio import Ejercicio, GrupoMuscular
+from app.models.entrenamiento import EjercicioEntrenamiento
 from app.models.rutina import RutinaEjercicio
 from app.models.usuario import Usuario
 from app.schemas.ejercicio import EjercicioCreate, EjercicioUpdate
@@ -126,12 +127,17 @@ def eliminar_ejercicio(db: Session, usuario: Usuario, ejercicio_id: int) -> None
     ejercicio = obtener_ejercicio(db, usuario, ejercicio_id)
     _exigir_propio(ejercicio, usuario)
 
-    en_uso = db.scalar(
+    en_rutina = db.scalar(
         select(RutinaEjercicio.id)
         .where(RutinaEjercicio.ejercicio_id == ejercicio.id)
         .limit(1)
     )
-    if en_uso is not None:
+    en_historial = db.scalar(
+        select(EjercicioEntrenamiento.id)
+        .where(EjercicioEntrenamiento.ejercicio_id == ejercicio.id)
+        .limit(1)
+    )
+    if en_rutina is not None or en_historial is not None:
         raise EjercicioEnUso()
 
     db.delete(ejercicio)

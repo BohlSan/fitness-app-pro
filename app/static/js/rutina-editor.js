@@ -3,7 +3,7 @@
 
 requerirSesion();
 
-const rutinaId = new URLSearchParams(window.location.search).get("id");
+let rutinaId = new URLSearchParams(window.location.search).get("id");
 
 const campoNombre = document.getElementById("nombre");
 const campoDescripcion = document.getElementById("descripcion");
@@ -310,6 +310,45 @@ document.getElementById("btn-agregar-dia").addEventListener("click", () => {
 });
 
 botonGuardar.addEventListener("click", guardar);
+
+// Guarda la rutina y arranca el entrenamiento del día que se está viendo
+document.getElementById("iniciar").addEventListener("click", async () => {
+  mostrarError("");
+  const problema = validar();
+  if (problema) {
+    mostrarError(problema);
+    return;
+  }
+
+  const diaSemana = estado.dias[diaActivo].dia_semana;
+  const botonIniciar = document.getElementById("iniciar");
+  botonIniciar.disabled = true;
+  try {
+    const rutina = rutinaId
+      ? await apiFetch(`/rutinas/${rutinaId}`, { method: "PUT", body: armarCuerpo() })
+      : await apiFetch("/rutinas", { method: "POST", body: armarCuerpo() });
+
+    // La rutina queda guardada: se sigue trabajando sobre ella
+    rutinaId = String(rutina.id);
+    history.replaceState(null, "", `/rutina.html?id=${rutina.id}`);
+    document.getElementById("titulo-pagina").textContent = "Editar rutina";
+    botonEliminar.classList.remove("oculto");
+    estado = desdeRespuesta(rutina);
+    ordenarDias();
+    diaActivo = estado.dias.findIndex((dia) => dia.dia_semana === diaSemana);
+    render();
+
+    const dia = rutina.dias.find((d) => d.dia_semana === diaSemana);
+    const entrenamiento = await apiFetch("/entrenamientos", {
+      method: "POST",
+      body: { rutina_id: rutina.id, dia_id: dia.id },
+    });
+    window.location.href = `/entrenamiento.html?id=${entrenamiento.id}`;
+  } catch (e) {
+    mostrarError(e.message);
+    botonIniciar.disabled = false;
+  }
+});
 
 botonEliminar.addEventListener("click", async () => {
   if (!window.confirm("¿Eliminar esta rutina? Esta acción no se puede deshacer.")) return;
