@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Historial</title>
+  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/ejercicios.css?v=1">
+  <link rel="stylesheet" href="/css/rutinas.css?v=1">
+  <link rel="stylesheet" href="/css/entrenamiento.css?v=1">
+  <link rel="stylesheet" href="/css/historial.css?v=1">
+</head>
+<body>
+  <main class="pagina">
+    <a class="enlace-volver" href="/home.html">← Volver al inicio</a>
+    <h1>Historial</h1>
+
+    <section class="bloque">
+      <div class="cal-cabecera">
+        <button type="button" class="boton-icono" id="mes-anterior" aria-label="Mes anterior">‹</button>
+        <h2 class="subtitulo-bloque" id="titulo-mes"></h2>
+        <button type="button" class="boton-icono" id="mes-siguiente" aria-label="Mes siguiente">›</button>
+      </div>
+      <div class="cal-semana">
+        <span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span>
+      </div>
+      <div class="cal-grilla" id="grilla"></div>
+      <p class="leyenda">💪 + número = dificultad registrada · ✅ = entrenaste sin registrar dificultad</p>
+    </section>
+
+    <section class="bloque">
+      <div class="chips" id="filtros-rapidos">
+        <button type="button" class="chip" data-filtro="hoy">Hoy</button>
+        <button type="button" class="chip" data-filtro="semana">Esta semana</button>
+        <button type="button" class="chip" data-filtro="mes">Este mes</button>
+        <button type="button" class="chip" data-filtro="todo">Todo</button>
+      </div>
+      <div class="periodo">
+        <label class="campo-chico">Desde
+          <input type="date" id="desde">
+        </label>
+        <label class="campo-chico">Hasta
+          <input type="date" id="hasta">
+        </label>
+        <button type="button" class="boton-chico" id="aplicar-periodo">Ver período</button>
+      </div>
+      <p class="mensaje-error" id="error-periodo" role="alert"></p>
+    </section>
+
+    <p class="filtro-activo" id="filtro-activo"></p>
+    <p class="estado-lista" id="estado" role="status"></p>
+    <div class="lista-rutinas" id="lista"></div>
+    <button type="button" class="boton secundario oculto" id="mas">Cargar más</button>
+  </main>
+
+  <script src="/js/api.js?v=3"></script>
+  <script src="/js/fechas-ui.js?v=1"></script>
+  <script src="/js/historial.js?v=1"></script>
+</body>
+</html>

@@ -1,16 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status
+from datetime import date
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models.usuario import Usuario
 from app.schemas.entrenamiento import (
+    DiaCalendarioOut,
     EntrenamientoOut,
     EntrenamientoStart,
     EntrenamientoSync,
     FinalizarIn,
 )
-from app.services import entrenamiento_service, rutina_service
+from app.services import entrenamiento_service, historial_service, rutina_service
 
 router = APIRouter(prefix="/entrenamientos", tags=["Entrenamientos"])
 
@@ -30,6 +34,37 @@ def en_curso(usuario: Usuario = Depends(get_current_user), db: Session = Depends
     if entrenamiento is None:
         return None
     return EntrenamientoOut.model_validate(entrenamiento)
+
+
+@router.get("", response_model=list[EntrenamientoOut])
+def historial(
+    desde: date | None = None,
+    hasta: date | None = None,
+    limite: int = Query(default=20, ge=1, le=100),
+    offset: int = Query(default=0, ge=0),
+    usuario: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    try:
+        entrenamientos = historial_service.listar_historial(
+            db, usuario, desde, hasta, limite, offset
+        )
+    except historial_service.PeriodoInvalido:
+        raise HTTPException(
+            status_code=422,
+            detail='La fecha "desde" no puede ser posterior a "hasta"',
+        )
+    return [EntrenamientoOut.model_validate(e) for e in entrenamientos]
+
+
+@router.get("/calendario", response_model=list[DiaCalendarioOut])
+def calendario(
+    anio: Annotated[int, Query(ge=2000, le=2100)],
+    mes: Annotated[int, Query(ge=1, le=12)],
+    usuario: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return historial_service.calendario_mensual(db, usuario, anio, mes)
 
 
 @router.post("", response_model=EntrenamientoOut, status_code=status.HTTP_201_CREATED)

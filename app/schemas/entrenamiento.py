@@ -110,3 +110,9 @@ class EntrenamientoOut(BaseModel):
     @property
     def series_completadas(self) -> int:
         return sum(1 for e in self.ejercicios for s in e.series if s.completada)
+
+
+class DiaCalendarioOut(BaseModel):
+    fecha: date
+    cantidad: int
+    dificultad_max: int | None

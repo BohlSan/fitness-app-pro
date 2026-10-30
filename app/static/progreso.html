@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mi progreso</title>
+  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/ejercicios.css?v=1">
+  <link rel="stylesheet" href="/css/rutinas.css?v=1">
+  <link rel="stylesheet" href="/css/entrenamiento.css?v=1">
+  <link rel="stylesheet" href="/css/progreso.css?v=1">
+</head>
+<body>
+  <main class="pagina">
+    <a class="enlace-volver" href="/home.html">← Volver al inicio</a>
+    <h1>Mi progreso</h1>
+
+    <!-- Resumen y frecuencia -->
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Resumen</h2>
+      <div class="chips" id="periodos">
+        <button type="button" class="chip activo" data-dias="30">30 días</button>
+        <button type="button" class="chip" data-dias="90">90 días</button>
+        <button type="button" class="chip" data-dias="365">1 año</button>
+        <button type="button" class="chip" data-dias="0">Todo</button>
+      </div>
+      <div class="resumen-grid" id="datos-resumen"></div>
+      <h3 class="subtitulo-chico">Entrenamientos por semana</h3>
+      <div class="grafico"><canvas id="grafico-semanas"></canvas></div>
+    </section>
+
+    <!-- Peso corporal -->
+    <section class="bloque" id="seccion-peso">
+      <h2 class="subtitulo-bloque">Peso corporal</h2>
+      <form class="peso-form" id="form-peso" novalidate>
+        <label class="campo-chico">Fecha
+          <input type="date" id="peso-fecha">
+        </label>
+        <label class="campo-chico">Peso (kg)
+          <input type="number" id="peso-valor" step="0.1" min="21" max="400" inputmode="decimal" placeholder="70.5">
+        </label>
+        <button type="submit" class="boton-chico" id="peso-guardar">Registrar</button>
+      </form>
+      <p class="mensaje-error" id="error-peso" role="alert"></p>
+      <div class="resumen-grid" id="datos-peso"></div>
+      <p class="tendencia" id="texto-tendencia"></p>
+      <div class="grafico"><canvas id="grafico-peso"></canvas></div>
+    </section>
+
+    <!-- Ejercicios y marcas -->
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Evolución de ejercicios</h2>
+      <p class="aviso-grafico" id="sin-ejercicios">Todavía no entrenaste ningún ejercicio.</p>
+      <div id="zona-ejercicio" class="oculto">
+        <select id="select-ejercicio" aria-label="Ejercicio"></select>
+        <div class="chips" id="metricas">
+          <button type="button" class="chip activo" data-metrica="peso">Peso máximo</button>
+          <button type="button" class="chip" data-metrica="volumen">Volumen</button>
+        </div>
+        <div class="resumen-grid" id="datos-ejercicio"></div>
+        <div class="grafico"><canvas id="grafico-ejercicio"></canvas></div>
+        <p class="aviso-grafico" id="aviso-ejercicio"></p>
+        <h3 class="subtitulo-chico">Repeticiones máximas por peso</h3>
+        <ul class="resumen-lista" id="reps-por-peso"></ul>
+      </div>
+    </section>
+
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">🏆 Mejores marcas</h2>
+      <ul class="resumen-lista" id="lista-marcas"></ul>
+    </section>
+
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Racha e hidratación</h2>
+      <p class="aviso-grafico">Disponibles próximamente.</p>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+  <script src="/js/api.js?v=3"></script>
+  <script src="/js/ejercicios-ui.js?v=1"></script>
+  <script src="/js/fechas-ui.js?v=1"></script>
+  <script src="/js/progreso.js?v=1"></script>
+</body>
+</html>

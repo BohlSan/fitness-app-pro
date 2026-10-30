@@ -31,13 +31,15 @@
 
   <!-- Vista: resumen al terminar -->
   <main class="pagina oculto" id="vista-resumen">
-    <h1>¡Entrenamiento terminado!</h1>
+    <h1 id="resumen-encabezado">Detalle del entrenamiento</h1>
     <p class="subtitulo" id="resumen-titulo"></p>
     <div class="resumen-grid" id="resumen-datos"></div>
     <div class="ejercicio-tags" id="resumen-musculos"></div>
     <div class="emojis-estado" id="resumen-estado"></div>
+    <div class="records oculto" id="resumen-records"></div>
     <ul class="resumen-lista" id="resumen-ejercicios"></ul>
-    <a class="boton" href="/entrenar.html">Volver a Entrenar</a>
+    <a class="boton" href="/historial.html">Ver historial</a>
+    <a class="boton secundario" href="/entrenar.html">Volver a Entrenar</a>
   </main>
 
   <!-- Cierre: agua, dificultad, cansancio y ánimo -->
@@ -77,6 +79,7 @@
 
   <script src="/js/api.js?v=3"></script>
   <script src="/js/ejercicios-ui.js?v=1"></script>
-  <script src="/js/entrenamiento.js?v=1"></script>
+  <script src="/js/fechas-ui.js?v=1"></script>
+  <script src="/js/entrenamiento.js?v=3"></script>
 </body>
 </html>

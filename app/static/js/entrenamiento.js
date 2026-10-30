@@ -414,6 +414,7 @@ formFinalizar.addEventListener("submit", async (evento) => {
     dialogoFinalizar.close();
     clearInterval(intervaloCronometro);
     mostrarResumen(entrenamiento);
+    document.getElementById("resumen-encabezado").textContent = "¡Entrenamiento terminado!";
   } catch (e) {
     errorFinalizar.textContent = e.message;
     botonConfirmar.disabled = false;
@@ -429,7 +430,8 @@ function mostrarResumen(entrenamiento) {
   vistaEntrenamiento.classList.add("oculto");
   vistaResumen.classList.remove("oculto");
 
-  document.getElementById("resumen-titulo").textContent = entrenamiento.titulo;
+  document.getElementById("resumen-titulo").textContent =
+    `${entrenamiento.titulo} · ${formatoFechaLarga(entrenamiento.fecha)}`;
   document.getElementById("resumen-datos").replaceChildren(
     datoResumen(formatoDuracion(entrenamiento.duracion_segundos || 0), "Duración"),
     datoResumen(`${entrenamiento.volumen_total_kg} kg`, "Volumen total"),
@@ -453,14 +455,56 @@ function mostrarResumen(entrenamiento) {
   document.getElementById("resumen-estado").replaceChildren(...emojis);
 
   document.getElementById("resumen-ejercicios").replaceChildren(
-    ...entrenamiento.ejercicios.map((item) =>
-      el(
-        "li", {},
-        el("span", { text: item.ejercicio.nombre }),
-        el("span", { text: `${item.series.length} × · ${item.volumen_kg} kg` })
-      )
-    )
+    ...entrenamiento.ejercicios.map((item) => {
+      const cabecera = el(
+        "div",
+        { class: "resumen-cabecera" },
+        el("strong", { text: item.ejercicio.nombre }),
+        el("span", { text: `${item.volumen_kg} kg de volumen` })
+      );
+      const series = el(
+        "ul",
+        { class: "series-detalle" },
+        ...item.series.map((serie) =>
+          el("li", { text: `Serie ${serie.numero}: ${serie.peso_kg ?? "—"} kg × ${serie.repeticiones}` })
+        )
+      );
+      const hijos = [cabecera, series];
+      if (item.notas) hijos.push(el("p", { class: "rutina-meta", text: `📝 ${item.notas}` }));
+      return el("li", { class: "con-detalle" }, ...hijos);
+    })
   );
+
+  cargarRecords(entrenamiento.id);
+}
+
+// ---------- Récords (RF-24) ----------
+function textoRecord(pr) {
+  if (pr.tipo === "PESO") {
+    return `Nuevo récord de peso en ${pr.nombre}: ${pr.valor} kg (antes ${pr.anterior} kg)`;
+  }
+  if (pr.tipo === "VOLUMEN") {
+    return `Nuevo récord de volumen en ${pr.nombre}: ${pr.valor} kg en una sesión (antes ${pr.anterior} kg)`;
+  }
+  return `Nuevo récord en ${pr.nombre}: ${pr.valor} repeticiones con ${pr.peso_kg} kg (antes ${pr.anterior})`;
+}
+
+async function cargarRecords(id) {
+  const contenedor = document.getElementById("resumen-records");
+  try {
+    const prs = await apiFetch(`/estadisticas/entrenamientos/${id}/prs`);
+    if (!prs.length) {
+      contenedor.classList.add("oculto");
+      return;
+    }
+    contenedor.replaceChildren(
+      el("strong", { text: "🏆 ¡Récords personales!" }),
+      ...prs.map((pr) => el("p", { text: textoRecord(pr) }))
+    );
+    contenedor.classList.remove("oculto");
+  } catch (e) {
+    contenedor.classList.add("oculto");
+  }
 }
 
 // ---------- Eventos ----------

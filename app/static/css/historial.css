@@ -1,0 +1,64 @@
+/* ---------- Calendario ---------- */
+.cal-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.cal-cabecera h2 { margin: 0; }
+.cal-semana, .cal-grilla { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.cal-semana span { text-align: center; font-size: 0.78rem; font-weight: 600; color: var(--texto-suave); }
+
+.dia {
+  aspect-ratio: 1 / 1;
+  min-height: 44px;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  background: #f6f8fa;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  font: inherit;
+  cursor: pointer;
+}
+.dia.vacio { background: transparent; cursor: default; }
+.dia .num { font-size: 0.8rem; color: var(--texto-suave); line-height: 1; }
+.dia .marca { font-size: 1.05rem; line-height: 1.15; }
+.dia small { font-size: 0.62rem; font-weight: 700; color: var(--acento); line-height: 1; }
+
+.dia.con-entreno { background: var(--acento-claro); border-color: #bfe0cd; }
+.dia.nivel-1 { background: #eaf6ee; }
+.dia.nivel-2 { background: #d9efe2; }
+.dia.nivel-3 { background: #c8e8d6; }
+.dia.nivel-4 { background: #b8e1ca; }
+.dia.nivel-5 { background: #a6d9bd; }
+.dia.hoy { border-color: var(--acento); }
+.dia.seleccionado { background: var(--acento); border-color: var(--acento); }
+.dia.seleccionado .num, .dia.seleccionado small { color: #fff; }
+
+.leyenda { margin: 0; font-size: 0.78rem; color: var(--texto-suave); }
+
+/* ---------- Filtros ---------- */
+.periodo { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }
+@media (max-width: 480px) {
+  .periodo { grid-template-columns: 1fr 1fr; }
+  .periodo .boton-chico { grid-column: 1 / -1; }
+}
+.periodo input { padding: 8px; width: 100%; }
+.filtro-activo { margin: 4px 0 0; font-weight: 700; }
+
+/* ---------- Tarjetas de entrenamiento ---------- */
+.entreno-card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 14px 16px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.entreno-card:hover { border-color: var(--acento); box-shadow: 0 6px 18px rgba(31, 122, 77, 0.12); }
+.entreno-fecha { font-size: 0.82rem; color: var(--texto-suave); text-transform: capitalize; }
+.entreno-titulo { margin: 0; font-size: 1.05rem; }
+.entreno-datos { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 0.88rem; }
+.entreno-ejercicios { margin: 0; font-size: 0.85rem; color: var(--texto-suave); }
