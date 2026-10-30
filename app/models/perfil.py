@@ -1,7 +1,7 @@
 import enum
 from datetime import date
 
-from sqlalchemy import Date, Enum, Float, ForeignKey, UniqueConstraint
+from sqlalchemy import Date, Enum, Float, ForeignKey, UniqueConstraint, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.registry import mapper_registry
@@ -22,6 +22,7 @@ class ObjetivoFisico(str, enum.Enum):
 
 class UnidadHidratacion(str, enum.Enum):
     ML = "ML"
+    VASOS = "VASOS"
     BOTELLAS = "BOTELLAS"
 
 
@@ -45,6 +46,8 @@ class PerfilUsuario:
         Enum(UnidadHidratacion, native_enum=False, length=20)
     )
     ml_botella: Mapped[int | None] = mapped_column(default=None)
+    ml_vaso: Mapped[int] = mapped_column(default=250, server_default=text("250"))
+    meta_hidratacion_ml: Mapped[int] = mapped_column(default=2000, server_default=text("2000"))
 
 
 @mapper_registry.mapped

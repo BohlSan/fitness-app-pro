@@ -1,0 +1,45 @@
+/* ---------- Racha ---------- */
+.tarjeta-racha {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff3e6;
+  border: 1px solid #f3cfa3;
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+.racha-numero {
+  min-width: 64px;
+  text-align: center;
+  font-size: 2.3rem;
+  font-weight: 800;
+  line-height: 1;
+  color: #d9822b;
+}
+.racha-numero small { display: block; margin-top: 4px; font-size: 0.72rem; font-weight: 600; }
+.racha-texto p { margin: 2px 0 0; }
+.racha-mensaje { font-size: 0.9rem; font-weight: 600; }
+
+/* ---------- Hidratación ---------- */
+.agua {
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.agua h3 { margin: 0; font-size: 1rem; }
+.barra-agua { height: 14px; border-radius: 999px; background: #dbeaf5; overflow: hidden; }
+.barra-agua > div {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #4aa3df, #2b7fc0);
+  transition: width 0.4s ease;
+}
+.agua-texto { margin: 0; font-weight: 700; }
+.agua-detalle { margin: 0; font-size: 0.82rem; color: var(--texto-suave); }
+.agua-botones { display: flex; flex-wrap: wrap; gap: 8px; }
+.agua-botones .boton-chico { border-color: #9cc9e8; }
+.agua-botones .boton-chico:disabled { opacity: 0.4; cursor: not-allowed; }

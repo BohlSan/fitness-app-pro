@@ -176,3 +176,52 @@ def entrenamientos_por_semana(fechas: list[date], desde: date, hasta: date) -> l
         resultado.append({"semana_inicio": semana, "cantidad": conteo.get(semana, 0)})
         semana += timedelta(days=7)
     return resultado
+
+
+# ---------- Racha (RF-26) ----------
+def calcular_racha(fechas: list[date], meta: int, hoy: date) -> dict:
+    """Racha de constancia por semanas (de lunes a domingo).
+
+    - La racha cuenta días entrenados (dos sesiones el mismo día valen uno).
+    - Una semana cumple si los días entrenados alcanzan la meta; si no, es un "fallo".
+    - Un fallo no rompe la racha: los días de esa semana igual suman.
+    - Dos fallos seguidos la rompen: vuelve a 0 y empieza una nueva la semana siguiente.
+    - La semana en curso nunca rompe la racha; suma lo entrenado hasta hoy.
+    """
+    dias = sorted(set(fechas))
+    lunes_actual = hoy - timedelta(days=hoy.weekday())
+    dias_esta_semana = sum(1 for dia in dias if dia >= lunes_actual)
+    anteriores = [dia for dia in dias if dia < lunes_actual]
+
+    racha = 0
+    maxima = 0
+    fallos_seguidos = 0
+    if anteriores:
+        semanas = entrenamientos_por_semana(
+            anteriores, anteriores[0], lunes_actual - timedelta(days=1)
+        )
+        for semana in semanas:
+            cantidad = semana["cantidad"]
+            if cantidad >= meta:
+                fallos_seguidos = 0
+                racha += cantidad
+            else:
+                fallos_seguidos += 1
+                if fallos_seguidos >= 2:
+                    racha = 0
+                    fallos_seguidos = 0
+                else:
+                    racha += cantidad
+            maxima = max(maxima, racha)
+
+    actual = racha + dias_esta_semana
+    return {
+        "racha_actual": actual,
+        "racha_maxima": max(maxima, actual),
+        "meta_semanal": meta,
+        "dias_esta_semana": dias_esta_semana,
+        "faltan_esta_semana": max(meta - dias_esta_semana, 0),
+        "cumplida_esta_semana": dias_esta_semana >= meta,
+        # La semana pasada fue un fallo y esta todavía no alcanza la meta
+        "en_riesgo": fallos_seguidos == 1 and dias_esta_semana < meta,
+    }

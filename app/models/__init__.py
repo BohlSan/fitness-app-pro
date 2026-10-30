@@ -6,6 +6,7 @@ from app.models.entrenamiento import (
     EstadoEntrenamiento,
     Serie,
 )
+from app.models.hidratacion import RegistroHidratacion
 from app.models.perfil import (
     Genero,
     ObjetivoFisico,
@@ -28,6 +29,7 @@ __all__ = [
     "ObjetivoFisico",
     "PerfilUsuario",
     "RegistroAuditoria",
+    "RegistroHidratacion",
     "RegistroPeso",
     "RolUsuario",
     "Rutina",

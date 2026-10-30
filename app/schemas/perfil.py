@@ -27,6 +27,8 @@ class PerfilCreate(BaseModel):
     dias_entrenamiento_semana: int = Field(ge=1, le=7)
     unidad_hidratacion: UnidadHidratacion
     ml_botella: int | None = Field(default=None, ge=100, le=5000)
+    ml_vaso: int = Field(default=250, ge=50, le=1000)
+    meta_hidratacion_ml: int = Field(default=2000, ge=500, le=10000)
 
     @field_validator("fecha_nacimiento")
     @classmethod
@@ -43,6 +45,8 @@ class PerfilUpdate(BaseModel):
     dias_entrenamiento_semana: int | None = Field(default=None, ge=1, le=7)
     unidad_hidratacion: UnidadHidratacion | None = None
     ml_botella: int | None = Field(default=None, ge=100, le=5000)
+    ml_vaso: int | None = Field(default=None, ge=50, le=1000)
+    meta_hidratacion_ml: int | None = Field(default=None, ge=500, le=10000)
 
     @field_validator("fecha_nacimiento")
     @classmethod
@@ -61,6 +65,8 @@ class PerfilOut(BaseModel):
     dias_entrenamiento_semana: int
     unidad_hidratacion: UnidadHidratacion
     ml_botella: int | None
+    ml_vaso: int
+    meta_hidratacion_ml: int
 
     @computed_field
     @property

@@ -167,3 +167,6 @@ fieldset.campo > legend { padding: 0; margin-bottom: 8px; font-weight: 600; font
 .acciones-wizard { display: flex; gap: 10px; margin-top: 4px; }
 .acciones-wizard .boton { flex: 1; }
 .pie-wizard { margin: 0; text-align: center; font-size: 0.82rem; color: var(--texto-suave); }
+
+/* Con tres opciones de hidratación (ml, vasos, botellas) se reparten en tres columnas */
+.opciones.dos:has(input[value="VASOS"]) { grid-template-columns: repeat(3, 1fr); }

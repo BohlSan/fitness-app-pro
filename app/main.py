@@ -12,8 +12,10 @@ from app.routers import (
     ejercicios,
     entrenamientos,
     estadisticas,
+    hidratacion,
     perfil,
     peso,
+    racha,
     rutinas,
     trainer,
 )
@@ -36,6 +38,8 @@ app.include_router(rutinas.router)
 app.include_router(entrenamientos.router)
 app.include_router(peso.router)
 app.include_router(estadisticas.router)
+app.include_router(hidratacion.router)
+app.include_router(racha.router)
 app.include_router(trainer.router)
 
 

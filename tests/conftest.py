@@ -94,3 +94,39 @@ def ejercicios(db):
         db.commit()
         ids.append(ejercicio.id)
     return ids
+
+
+@pytest.fixture()
+def entrenar(client, db):
+    """Hace un entrenamiento completo en la fecha indicada y devuelve su id."""
+    from datetime import datetime, time, timezone
+
+    from app.models.entrenamiento import Entrenamiento
+
+    def _entrenar(headers, ejercicio_id, fecha, series=((60, 10),), agua_ml=None):
+        creado = client.post("/entrenamientos", json={}, headers=headers).json()
+        url = f"/entrenamientos/{creado['id']}"
+        client.put(
+            url,
+            json={
+                "ejercicios": [
+                    {
+                        "ejercicio_id": ejercicio_id,
+                        "series": [
+                            {"peso_kg": peso, "repeticiones": reps, "completada": True}
+                            for peso, reps in series
+                        ],
+                    }
+                ]
+            },
+            headers=headers,
+        )
+        client.post(f"{url}/finalizar", json={"agua_ml": agua_ml}, headers=headers)
+
+        registro = db.get(Entrenamiento, creado["id"])
+        registro.fecha = fecha
+        registro.iniciado_en = datetime.combine(fecha, time(10, 0), tzinfo=timezone.utc)
+        db.commit()
+        return creado["id"]
+
+    return _entrenar

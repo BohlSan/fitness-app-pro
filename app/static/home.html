@@ -4,14 +4,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Inicio</title>
-  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/ejercicios.css?v=1">
+  <link rel="stylesheet" href="/css/habitos.css?v=1">
 </head>
 <body>
   <main class="pantalla">
     <h1 id="saludo">Hola</h1>
     <p class="subtitulo" id="rol"></p>
     <p class="subtitulo" id="nota-rol"></p>
-    <ul id="resumen-perfil" class="resumen oculto"></ul>
+    <section class="tarjeta-racha oculto" id="tarjeta-racha"></section>
+      <section class="agua" id="tarjeta-agua"></section>
+      <ul id="resumen-perfil" class="resumen oculto"></ul>
     <p class="mensaje-error" id="error"></p>
     <p>Home provisorio. Las rutinas y los entrenamientos llegan en las próximas etapas.</p>
     <a class="boton" href="/entrenar.html">Entrenar</a>
@@ -21,6 +25,7 @@
     <button class="boton secundario" id="salir">Cerrar sesión</button>
   </main>
   <script src="/js/api.js?v=3"></script>
+    <script src="/js/habitos-ui.js?v=1"></script>
   <script>
     requerirSesion();
 
@@ -30,7 +35,7 @@
       const lista = document.getElementById("resumen-perfil");
       const hidratacion = perfil.unidad_hidratacion === "BOTELLAS"
         ? `Botellas de ${perfil.ml_botella} ml`
-        : "Mililitros";
+        : perfil.unidad_hidratacion === "VASOS" ? `Vasos de ${perfil.ml_vaso} ml` : "Mililitros";
       const filas = [
         ["Edad", `${perfil.edad} años`],
         ["Altura", `${perfil.altura_cm} cm`],
@@ -72,6 +77,8 @@
           throw e;
         }
         mostrarResumen(perfil);
+          pintarRacha(document.getElementById("tarjeta-racha"));
+          crearWidgetHidratacion(document.getElementById("tarjeta-agua"));
       } catch (e) {
         // Antes este error se perdía en silencio
         error.textContent = e.message || "No pudimos cargar tu información.";

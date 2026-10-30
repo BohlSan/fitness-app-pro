@@ -265,6 +265,49 @@ async function cargarEjercicios() {
   await cargarDetalleEjercicio();
 }
 
+// ---------- Racha e hidratación ----------
+async function cargarGraficoAgua() {
+  const dias = await apiFetch("/hidratacion/historial?dias=14");
+  dibujar("agua", "grafico-agua", {
+    data: {
+      labels: dias.map((dia) => fechaCorta(dia.fecha)),
+      datasets: [
+        {
+          type: "bar",
+          label: "Tomado (ml)",
+          data: dias.map((dia) => dia.total_ml),
+          backgroundColor: "#4aa3df",
+        },
+        {
+          type: "line",
+          label: "Meta (ml)",
+          data: dias.map((dia) => dia.meta_ml),
+          borderColor: COLOR_TENDENCIA,
+          borderDash: [6, 6],
+          pointRadius: 0,
+        },
+      ],
+    },
+    options: {
+      ...OPCIONES_BASE,
+      plugins: { legend: { display: true } },
+      scales: { y: { beginAtZero: true } },
+    },
+  });
+}
+
+async function cargarHabitos() {
+  if (!sesionActual || sesionActual.rol !== "USUARIO") {
+    document.getElementById("tarjeta-agua").closest(".bloque").classList.add("oculto");
+    return;
+  }
+  pintarRacha(document.getElementById("tarjeta-racha"));
+  await crearWidgetHidratacion(document.getElementById("tarjeta-agua"), {
+    alCambiar: () => seguro(cargarGraficoAgua),
+  });
+  await cargarGraficoAgua();
+}
+
 // ---------- Eventos ----------
 function activarChip(contenedor, boton) {
   contenedor.querySelectorAll(".chip").forEach((chip) => chip.classList.remove("activo"));
@@ -313,5 +356,6 @@ async function seguro(funcion) {
     seguro(cargarResumen),
     sesionActual && sesionActual.rol === "USUARIO" ? seguro(cargarPeso) : Promise.resolve(),
     seguro(cargarEjercicios),
+    seguro(cargarHabitos),
   ]);
 })();

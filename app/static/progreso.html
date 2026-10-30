@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="/css/ejercicios.css?v=1">
   <link rel="stylesheet" href="/css/rutinas.css?v=1">
   <link rel="stylesheet" href="/css/entrenamiento.css?v=1">
+  <link rel="stylesheet" href="/css/habitos.css?v=1">
   <link rel="stylesheet" href="/css/progreso.css?v=1">
 </head>
 <body>
@@ -72,7 +73,10 @@
 
     <section class="bloque">
       <h2 class="subtitulo-bloque">Racha e hidratación</h2>
-      <p class="aviso-grafico">Disponibles próximamente.</p>
+      <div class="tarjeta-racha oculto" id="tarjeta-racha"></div>
+      <div class="agua" id="tarjeta-agua"></div>
+      <h3 class="subtitulo-chico">Hidratación de los últimos 14 días</h3>
+      <div class="grafico"><canvas id="grafico-agua"></canvas></div>
     </section>
   </main>
 
@@ -80,6 +84,7 @@
   <script src="/js/api.js?v=3"></script>
   <script src="/js/ejercicios-ui.js?v=1"></script>
   <script src="/js/fechas-ui.js?v=1"></script>
-  <script src="/js/progreso.js?v=1"></script>
+  <script src="/js/habitos-ui.js?v=1"></script>
+  <script src="/js/progreso.js?v=2"></script>
 </body>
 </html>
