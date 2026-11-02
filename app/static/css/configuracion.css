@@ -1,0 +1,13 @@
+.form-config { display: flex; flex-direction: column; gap: 12px; }
+.fila-doble { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 480px) {
+  .fila-doble { grid-template-columns: 1fr; }
+}
+.subtitulo-config { margin: 6px 0 0; font-size: 0.95rem; }
+
+.mensaje-ok { color: var(--acento); }
+
+.zona-peligro { border-color: #e6b8b4; background: #fff7f6; }
+.zona-peligro h2 { color: var(--error); }
+.zona-peligro p { margin: 0; font-size: 0.9rem; }
+.boton.peligro { background: var(--error); }

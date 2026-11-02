@@ -7,8 +7,10 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from app.database import get_db
+from app.services.observadores import registrar_observadores
 from app.routers import (
     auth,
+    cuenta,
     ejercicios,
     entrenamientos,
     estadisticas,
@@ -18,6 +20,7 @@ from app.routers import (
     racha,
     rutinas,
     trainer,
+    vinculo,
 )
 
 class StaticFilesSinCache(StaticFiles):
@@ -28,6 +31,8 @@ class StaticFilesSinCache(StaticFiles):
         respuesta.headers["Cache-Control"] = "no-cache"
         return respuesta
 
+
+registrar_observadores()
 
 app = FastAPI(title="Fitness App")
 
@@ -40,6 +45,8 @@ app.include_router(peso.router)
 app.include_router(estadisticas.router)
 app.include_router(hidratacion.router)
 app.include_router(racha.router)
+app.include_router(vinculo.router)
+app.include_router(cuenta.router)
 app.include_router(trainer.router)
 
 

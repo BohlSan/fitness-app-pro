@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mis clientes</title>
+  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/ejercicios.css?v=1">
+  <link rel="stylesheet" href="/css/rutinas.css?v=1">
+  <link rel="stylesheet" href="/css/trainer.css?v=1">
+</head>
+<body>
+  <main class="pagina">
+    <a class="enlace-volver" href="/home.html">← Volver al inicio</a>
+    <h1>Mis clientes</h1>
+
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Tu código de enlace</h2>
+      <p class="rutina-meta">Compartilo con tus clientes: lo ingresan al completar su perfil o desde su inicio.</p>
+      <div class="codigo-caja">
+        <strong class="codigo" id="codigo">········</strong>
+        <button type="button" class="boton-chico" id="copiar">Copiar</button>
+        <button type="button" class="boton-chico peligro" id="regenerar">Generar uno nuevo</button>
+      </div>
+      <p class="mensaje-error" id="error-codigo" role="alert"></p>
+    </section>
+
+    <section class="bloque oculto" id="bloque-pendientes">
+      <h2 class="subtitulo-bloque">Solicitudes pendientes</h2>
+      <div class="lista-rutinas" id="lista-pendientes"></div>
+    </section>
+
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Clientes activos</h2>
+      <p class="estado-lista" id="estado-clientes" role="status"></p>
+      <div class="lista-rutinas" id="lista-clientes"></div>
+    </section>
+
+    <section class="bloque">
+      <div class="acciones-fila" style="justify-content: space-between">
+        <h2 class="subtitulo-bloque">Actividad reciente</h2>
+        <button type="button" class="boton-chico" id="marcar-leidas">Marcar como leídas</button>
+      </div>
+      <p class="estado-lista" id="estado-actividad" role="status"></p>
+      <div class="lista-rutinas" id="lista-actividad"></div>
+    </section>
+  </main>
+
+  <script src="/js/api.js?v=3"></script>
+  <script src="/js/fechas-ui.js?v=1"></script>
+  <script src="/js/entrenador-ui.js?v=1"></script>
+  <script src="/js/trainer.js?v=1"></script>
+</body>
+</html>

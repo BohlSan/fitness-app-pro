@@ -1,0 +1,71 @@
+/* ---------- Código de enlace ---------- */
+.codigo-caja { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.codigo {
+  font-family: ui-monospace, "Cascadia Mono", Consolas, monospace;
+  font-size: 1.6rem;
+  letter-spacing: 0.18em;
+  background: var(--acento-claro);
+  color: var(--acento);
+  padding: 6px 14px;
+  border-radius: 12px;
+}
+
+/* ---------- Clientes y solicitudes ---------- */
+.cliente-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  text-decoration: none;
+  color: inherit;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-radius: 16px;
+  padding: 14px 16px;
+  transition: border-color 0.15s ease;
+}
+.cliente-card:hover { border-color: var(--acento); }
+.cliente-card p { margin: 0; }
+.cliente-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+
+.solicitud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  background: #fff8e1;
+  border: 1px solid #f0d28a;
+  border-radius: 14px;
+  padding: 12px 14px;
+}
+.solicitud p { margin: 2px 0 0; }
+
+.cuota { padding: 2px 10px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+.cuota.AL_DIA { background: #e2f5ea; color: #1f7a4d; }
+.cuota.PENDIENTE { background: #fff3d6; color: #8a5a00; }
+.cuota.VENCIDA { background: #fde7e5; color: var(--error); }
+
+/* ---------- Novedades ---------- */
+.actividad-item {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: var(--tarjeta);
+  border: 1px solid var(--borde);
+  border-left: 4px solid var(--borde);
+  border-radius: 12px;
+  padding: 10px 14px;
+  font-size: 0.92rem;
+}
+.actividad-item.nueva { border-left-color: var(--acento); font-weight: 600; }
+.actividad-item small { display: block; font-weight: 400; color: var(--texto-suave); }
+
+/* ---------- Ficha del cliente ---------- */
+.acciones-fila { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.acciones-fila .boton { width: auto; padding: 10px 18px; }
+.fila-cuota { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.fila-cuota select { padding: 8px; }
+.form-pago { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: end; }
+.form-pago .completo { grid-column: 1 / -1; }
+.form-pago input { padding: 8px; width: 100%; }
+.series-detalle { list-style: none; margin: 4px 0 0; padding: 0; font-size: 0.85rem; color: var(--texto-suave); }

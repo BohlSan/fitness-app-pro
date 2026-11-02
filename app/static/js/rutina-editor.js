@@ -365,7 +365,12 @@ botonEliminar.addEventListener("click", async () => {
   try {
     grupos = await obtenerGrupos();
     if (rutinaId) {
-      estado = desdeRespuesta(await apiFetch(`/rutinas/${rutinaId}`));
+      const rutina = await apiFetch(`/rutinas/${rutinaId}`);
+      estado = desdeRespuesta(rutina);
+      // Rutina de un cliente: el trainer la modifica, pero no la entrena
+      if (rutina.propietario_id !== obtenerUsuario().id) {
+        document.getElementById("iniciar").classList.add("oculto");
+      }
       document.getElementById("titulo-pagina").textContent = "Editar rutina";
       botonEliminar.classList.remove("oculto");
       ordenarDias();

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cliente</title>
+  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/ejercicios.css?v=1">
+  <link rel="stylesheet" href="/css/rutinas.css?v=1">
+  <link rel="stylesheet" href="/css/entrenamiento.css?v=1">
+  <link rel="stylesheet" href="/css/trainer.css?v=1">
+</head>
+<body>
+  <main class="pagina">
+    <a class="enlace-volver" href="/trainer.html">← Mis clientes</a>
+    <h1 id="nombre-cliente">Cliente</h1>
+    <p class="rutina-meta" id="meta-cliente"></p>
+
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Información básica</h2>
+      <div class="resumen-grid" id="datos-basicos"></div>
+      <div class="acciones-fila">
+        <a class="boton" id="ver-progreso" href="#">Ver progreso completo</a>
+        <button type="button" class="boton-chico peligro" id="finalizar-relacion">Finalizar relación</button>
+      </div>
+    </section>
+
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Últimos 30 días</h2>
+      <div class="resumen-grid" id="datos-actividad"></div>
+    </section>
+
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Cuota y pagos</h2>
+      <div class="fila-cuota">
+        <span class="cuota" id="estado-cuota"></span>
+        <select id="select-cuota" aria-label="Estado de la cuota">
+          <option value="AL_DIA">Al día</option>
+          <option value="PENDIENTE">Pendiente</option>
+          <option value="VENCIDA">Vencida</option>
+        </select>
+      </div>
+      <form class="form-pago" id="form-pago" novalidate>
+        <label class="campo-chico">Fecha
+          <input type="date" id="pago-fecha">
+        </label>
+        <label class="campo-chico">Monto ($)
+          <input type="number" id="pago-monto" min="1" step="1" inputmode="numeric" placeholder="25000">
+        </label>
+        <label class="campo-chico completo">Concepto (opcional)
+          <input type="text" id="pago-concepto" maxlength="100" placeholder="Ej: Cuota de noviembre">
+        </label>
+        <button type="submit" class="boton-chico completo" id="pago-guardar">Registrar pago</button>
+      </form>
+      <p class="mensaje-error" id="error-pago" role="alert"></p>
+      <ul class="resumen-lista" id="lista-pagos"></ul>
+    </section>
+
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Rutinas asignadas</h2>
+      <div class="acciones-fila">
+        <select id="select-rutina" aria-label="Rutina para asignar"></select>
+        <button type="button" class="boton-chico" id="asignar">Asignar al cliente</button>
+      </div>
+      <p class="rutina-meta" id="aviso-rutinas"></p>
+      <p class="mensaje-error" id="error-asignacion" role="alert"></p>
+      <ul class="resumen-lista" id="lista-asignaciones"></ul>
+    </section>
+
+    <section class="bloque">
+      <h2 class="subtitulo-bloque">Historial de entrenamientos</h2>
+      <p class="estado-lista" id="estado-historial" role="status"></p>
+      <div class="lista-rutinas" id="lista-historial"></div>
+      <button type="button" class="boton secundario oculto" id="mas">Cargar más</button>
+    </section>
+  </main>
+
+  <dialog class="dialogo" id="dialogo-entrenamiento">
+    <div class="dialogo-cabecera">
+      <h2 id="detalle-titulo">Entrenamiento</h2>
+      <button type="button" class="cerrar" id="cerrar-detalle" aria-label="Cerrar">×</button>
+    </div>
+    <div class="dialogo-cuerpo" id="detalle-cuerpo"></div>
+  </dialog>
+
+  <script src="/js/api.js?v=3"></script>
+  <script src="/js/fechas-ui.js?v=1"></script>
+  <script src="/js/entrenador-ui.js?v=1"></script>
+  <script src="/js/cliente.js?v=1"></script>
+</body>
+</html>

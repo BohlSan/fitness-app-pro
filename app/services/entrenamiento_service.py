@@ -17,6 +17,7 @@ from app.schemas.entrenamiento import (
     SerieIn,
 )
 from app.services import ejercicio_service, rutina_service
+from app.services.eventos import historial_entrenamientos
 from app.services.fechas import ahora_utc, hoy
 
 
@@ -66,6 +67,22 @@ def obtener_en_curso(db: Session, usuario: Usuario) -> Entrenamiento | None:
         )
         .execution_options(populate_existing=True)
     )
+
+
+def obtener_finalizado_de(db: Session, usuario_id: int, entrenamiento_id: int) -> Entrenamiento:
+    """Entrenamiento finalizado de una persona (lo usa el trainer sobre sus clientes)."""
+    entrenamiento = db.scalar(
+        _consulta()
+        .where(Entrenamiento.id == entrenamiento_id)
+        .execution_options(populate_existing=True)
+    )
+    if (
+        entrenamiento is None
+        or entrenamiento.usuario_id != usuario_id
+        or entrenamiento.estado != EstadoEntrenamiento.FINALIZADO
+    ):
+        raise EntrenamientoNoEncontrado()
+    return entrenamiento
 
 
 def _exigir_en_curso(entrenamiento: Entrenamiento) -> None:
@@ -226,6 +243,9 @@ def finalizar_entrenamiento(
     entrenamiento.dificultad = datos.dificultad
     entrenamiento.cansancio = datos.cansancio
     entrenamiento.animo = datos.animo
+
+    # Observer: avisa a quienes siguen este historial (el trainer vinculado)
+    historial_entrenamientos.finalizado(db, entrenamiento)
 
     db.commit()
     return obtener_entrenamiento(db, usuario, entrenamiento_id)

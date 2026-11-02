@@ -9,7 +9,6 @@ from app.models.entrenamiento import (
     Entrenamiento,
     EstadoEntrenamiento,
 )
-from app.models.usuario import Usuario
 
 
 class PeriodoInvalido(Exception):
@@ -27,7 +26,7 @@ def _consulta():
 
 def listar_historial(
     db: Session,
-    usuario: Usuario,
+    usuario_id: int,
     desde: date | None = None,
     hasta: date | None = None,
     limite: int = 20,
@@ -38,7 +37,7 @@ def listar_historial(
         raise PeriodoInvalido()
 
     consulta = _consulta().where(
-        Entrenamiento.usuario_id == usuario.id,
+        Entrenamiento.usuario_id == usuario_id,
         Entrenamiento.estado == EstadoEntrenamiento.FINALIZADO,
     )
     if desde is not None:
@@ -55,7 +54,7 @@ def listar_historial(
     return list(db.scalars(consulta))
 
 
-def calendario_mensual(db: Session, usuario: Usuario, anio: int, mes: int) -> list[dict]:
+def calendario_mensual(db: Session, usuario_id: int, anio: int, mes: int) -> list[dict]:
     """Por cada día del mes con entrenamientos: cuántos y la dificultad más alta."""
     primero = date(anio, mes, 1)
     ultimo = date(anio, mes, calendar.monthrange(anio, mes)[1])
@@ -67,7 +66,7 @@ def calendario_mensual(db: Session, usuario: Usuario, anio: int, mes: int) -> li
             func.max(Entrenamiento.dificultad),
         )
         .where(
-            Entrenamiento.usuario_id == usuario.id,
+            Entrenamiento.usuario_id == usuario_id,
             Entrenamiento.estado == EstadoEntrenamiento.FINALIZADO,
             Entrenamiento.fecha >= primero,
             Entrenamiento.fecha <= ultimo,

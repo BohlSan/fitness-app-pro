@@ -129,4 +129,9 @@ def entrenar(client, db):
         db.commit()
         return creado["id"]
 
-    return _entrenar
+        return _entrenar
+
+
+@pytest.fixture()
+def headers_otro_trainer(client):
+    return _crear_cuenta(client, "trainer2@example.com", "PERSONAL_TRAINER")

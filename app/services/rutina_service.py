@@ -1,10 +1,11 @@
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session, joinedload, selectinload
 
 from app.models.rutina import DiaRutina, Rutina, RutinaEjercicio
-from app.models.usuario import Usuario
+from app.models.trainer import AsignacionRutina, EstadoAsignacion
+from app.models.usuario import RolUsuario, Usuario
 from app.schemas.rutina import EjercicioRutinaIn, RutinaIn
-from app.services import auditoria_service, ejercicio_service
+from app.services import auditoria_service, ejercicio_service, vinculo_service
 
 
 class RutinaNoEncontrada(Exception):
@@ -24,9 +25,41 @@ def _consulta():
     )
 
 
-def _puede_acceder(usuario: Usuario, rutina: Rutina) -> bool:
-    # Hoy solo el propietario. En la Etapa 9 se suma el trainer autorizado (RF-09)
-    return rutina.propietario_id == usuario.id
+def _puede_acceder(db: Session, usuario: Usuario, rutina: Rutina) -> bool:
+    if rutina.propietario_id == usuario.id:
+        return True
+    # RF-09 y RF-30: el trainer que armó la rutina de un cliente la gestiona
+    # mientras la relación con ese cliente siga activa
+    return (
+        usuario.rol == RolUsuario.PERSONAL_TRAINER
+        and rutina.autor_id == usuario.id
+        and vinculo_service.es_cliente_activo(db, usuario.id, rutina.propietario_id)
+    )
+
+
+def copiar_rutina(origen: Rutina, propietario_id: int, autor_id: int) -> Rutina:
+    """Copia una rutina para otra persona (la asignación de un trainer a su cliente)."""
+    copia = Rutina(
+        nombre=origen.nombre,
+        descripcion=origen.descripcion,
+        autor_id=autor_id,
+        propietario_id=propietario_id,
+    )
+    for dia in origen.dias:
+        nuevo_dia = DiaRutina(dia_semana=dia.dia_semana, nombre=dia.nombre)
+        for item in dia.ejercicios:
+            nuevo_dia.ejercicios.append(
+                RutinaEjercicio(
+                    ejercicio_id=item.ejercicio_id,
+                    orden=item.orden,
+                    series=item.series,
+                    repeticiones=item.repeticiones,
+                    peso_sugerido_kg=item.peso_sugerido_kg,
+                    descanso_segundos=item.descanso_segundos,
+                )
+            )
+        copia.dias.append(nuevo_dia)
+    return copia
 
 
 def listar_rutinas(db: Session, usuario: Usuario) -> list[Rutina]:
@@ -39,7 +72,7 @@ def obtener_rutina(db: Session, usuario: Usuario, rutina_id: int) -> Rutina:
         _consulta().where(Rutina.id == rutina_id).execution_options(populate_existing=True)
     )
     # La rutina de otra persona se trata como inexistente (RNF-15)
-    if rutina is None or not _puede_acceder(usuario, rutina):
+    if rutina is None or not _puede_acceder(db, usuario, rutina):
         raise RutinaNoEncontrada()
     return rutina
 
@@ -138,5 +171,10 @@ def actualizar_rutina(
 def eliminar_rutina(db: Session, usuario: Usuario, rutina_id: int) -> None:
     rutina = obtener_rutina(db, usuario, rutina_id)
     auditoria_service.registrar(db, usuario, "ELIMINAR_RUTINA", "rutina", rutina_id)
+    db.execute(
+        update(AsignacionRutina)
+        .where(AsignacionRutina.rutina_id == rutina_id)
+        .values(estado=EstadoAsignacion.FINALIZADA)
+    )
     db.delete(rutina)
     db.commit()

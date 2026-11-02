@@ -15,6 +15,16 @@ from app.models.perfil import (
     UnidadHidratacion,
 )
 from app.models.rutina import DiaRutina, DiaSemana, Rutina, RutinaEjercicio
+from app.models.trainer import (
+    ActividadCliente,
+    AsignacionRutina,
+    EstadoAsignacion,
+    EstadoCuota,
+    EstadoVinculo,
+    PagoCliente,
+    PerfilTrainer,
+    VinculoTrainer,
+)
 from app.models.usuario import RolUsuario, Usuario
 
 __all__ = [
@@ -37,4 +47,12 @@ __all__ = [
     "Serie",
     "UnidadHidratacion",
     "Usuario",
+    "ActividadCliente",
+    "AsignacionRutina",
+    "EstadoAsignacion",
+    "EstadoCuota",
+    "EstadoVinculo",
+    "PagoCliente",
+    "PerfilTrainer",
+    "VinculoTrainer",
 ]

@@ -3,6 +3,10 @@
 
 requerirSesion();
 
+// Con ?cliente=ID, un trainer consulta el progreso de ese cliente (solo lectura)
+const CLIENTE_ID = new URLSearchParams(window.location.search).get("cliente");
+const BASE_API = CLIENTE_ID ? `/trainer/clientes/${CLIENTE_ID}` : "";
+
 const COLOR = "#1f7a4d";
 const COLOR_SUAVE = "rgba(31, 122, 77, 0.15)";
 const COLOR_TENDENCIA = "#d9822b";
@@ -61,7 +65,7 @@ const OPCIONES_BASE = {
 
 // ---------- Resumen y frecuencia ----------
 async function cargarResumen() {
-  const resumen = await apiFetch(`/estadisticas/resumen?${new URLSearchParams(rangoPeriodo())}`);
+  const resumen = await apiFetch(`${BASE_API}/estadisticas/resumen?${new URLSearchParams(rangoPeriodo())}`);
 
   const duracion =
     resumen.duracion_promedio_segundos === null ? null : Math.round(resumen.duracion_promedio_segundos);
@@ -134,7 +138,7 @@ function pintarPeso(evolucion) {
 }
 
 async function cargarPeso() {
-  pintarPeso(await apiFetch("/peso"));
+  pintarPeso(await apiFetch(`${BASE_API}/peso`));
 }
 
 document.getElementById("form-peso").addEventListener("submit", async (evento) => {
@@ -197,7 +201,7 @@ function pintarMarcas() {
 async function cargarDetalleEjercicio() {
   const id = document.getElementById("select-ejercicio").value;
   if (!id) return;
-  const detalle = await apiFetch(`/estadisticas/ejercicios/${id}?${new URLSearchParams(rangoPeriodo())}`);
+  const detalle = await apiFetch(`${BASE_API}/estadisticas/ejercicios/${id}?${new URLSearchParams(rangoPeriodo())}`);
 
   const marcas = detalle.marcas;
   document.getElementById("datos-ejercicio").replaceChildren(
@@ -248,7 +252,7 @@ async function cargarDetalleEjercicio() {
 }
 
 async function cargarEjercicios() {
-  ejerciciosEntrenados = await apiFetch("/estadisticas/ejercicios");
+  ejerciciosEntrenados = await apiFetch(`${BASE_API}/estadisticas/ejercicios`);
   pintarMarcas();
 
   const hay = ejerciciosEntrenados.length > 0;
@@ -297,7 +301,7 @@ async function cargarGraficoAgua() {
 }
 
 async function cargarHabitos() {
-  if (!sesionActual || sesionActual.rol !== "USUARIO") {
+  if (CLIENTE_ID || !sesionActual || sesionActual.rol !== "USUARIO") {
     document.getElementById("tarjeta-agua").closest(".bloque").classList.add("oculto");
     return;
   }
@@ -344,17 +348,22 @@ async function seguro(funcion) {
 
 (async () => {
   const hoyISO = aISO(new Date());
+  if (CLIENTE_ID) {
+    document.querySelector("h1").textContent = "Progreso del cliente";
+    document.querySelector(".enlace-volver").href = `/cliente.html?id=${CLIENTE_ID}`;
+  }
   const campoFecha = document.getElementById("peso-fecha");
   campoFecha.value = hoyISO;
   campoFecha.max = hoyISO;
 
   if (sesionActual && sesionActual.rol !== "USUARIO") {
-    document.getElementById("seccion-peso").classList.add("oculto");
+    if (!CLIENTE_ID) document.getElementById("seccion-peso").classList.add("oculto");
+  else document.getElementById("form-peso").classList.add("oculto");
   }
 
   await Promise.all([
     seguro(cargarResumen),
-    sesionActual && sesionActual.rol === "USUARIO" ? seguro(cargarPeso) : Promise.resolve(),
+    CLIENTE_ID || (sesionActual && sesionActual.rol === "USUARIO") ? seguro(cargarPeso) : Promise.resolve(),
     seguro(cargarEjercicios),
     seguro(cargarHabitos),
   ]);

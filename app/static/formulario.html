@@ -101,8 +101,8 @@
         </label>
 
         <label class="campo">Código de tu personal trainer
-          <small>Opcional. Disponible próximamente.</small>
-          <input type="text" id="codigo_enlace" disabled placeholder="Próximamente">
+          <small>Opcional. Si tu entrenador te dio un código, ingresalo acá.</small>
+          <input type="text" id="codigo_enlace" maxlength="12" autocomplete="off" placeholder="Ej: K7M2QX4P">
         </label>
       </section>
 
@@ -268,6 +268,16 @@
 
       try {
         await apiFetch("/perfil", { method: "POST", body: cuerpo });
+
+        const codigo = valor("codigo_enlace").toUpperCase();
+        if (codigo) {
+          try {
+            await apiFetch("/vinculo", { method: "POST", body: { codigo } });
+          } catch (e) {
+            // El perfil ya quedó guardado: el código se puede ingresar después desde el inicio
+            window.alert(`Tu perfil se guardó, pero no pudimos vincular al entrenador: ${e.message}`);
+          }
+        }
         window.location.href = "/home.html";
       } catch (e) {
         if (e.status === 409) {

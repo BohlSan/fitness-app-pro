@@ -53,6 +53,14 @@
       titulo.textContent = rutina.nombre;
       enlace.append(titulo);
 
+      // Rutina armada por un entrenador para esta persona
+      if (rutina.autor_id && rutina.autor_id !== rutina.propietario_id) {
+        const asignada = document.createElement("p");
+        asignada.className = "rutina-meta";
+        asignada.textContent = "🤝 Asignada por tu entrenador";
+        enlace.append(asignada);
+      }
+
       if (rutina.descripcion) {
         const descripcion = document.createElement("p");
         descripcion.className = "rutina-meta";

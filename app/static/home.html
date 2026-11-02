@@ -15,17 +15,22 @@
     <p class="subtitulo" id="nota-rol"></p>
     <section class="tarjeta-racha oculto" id="tarjeta-racha"></section>
       <section class="agua" id="tarjeta-agua"></section>
+    <section class="agua" id="tarjeta-entrenador"></section>
       <ul id="resumen-perfil" class="resumen oculto"></ul>
     <p class="mensaje-error" id="error"></p>
     <p>Home provisorio. Las rutinas y los entrenamientos llegan en las próximas etapas.</p>
+    <a class="boton oculto" id="btn-clientes" href="/trainer.html">Mis clientes</a>
     <a class="boton" href="/entrenar.html">Entrenar</a>
     <a class="boton secundario" href="/progreso.html">Progreso</a>
     <a class="boton secundario" href="/historial.html">Historial</a>
     <a class="boton secundario" href="/ejercicios.html">Ejercicios</a>
+    <a class="boton secundario" href="/configuracion.html">Configuración</a>
     <button class="boton secundario" id="salir">Cerrar sesión</button>
   </main>
   <script src="/js/api.js?v=3"></script>
     <script src="/js/habitos-ui.js?v=1"></script>
+  <script src="/js/fechas-ui.js?v=1"></script>
+  <script src="/js/entrenador-ui.js?v=1"></script>
   <script>
     requerirSesion();
 
@@ -61,7 +66,8 @@
 
         if (usuario.rol !== "USUARIO") {
           document.getElementById("nota-rol").textContent =
-            "Ingresaste como Personal Trainer. Tu panel de clientes se habilita en una próxima etapa.";
+            "Ingresaste como Personal Trainer.";
+          document.getElementById("btn-clientes").classList.remove("oculto");
           return;
         }
 
@@ -79,6 +85,7 @@
         mostrarResumen(perfil);
           pintarRacha(document.getElementById("tarjeta-racha"));
           crearWidgetHidratacion(document.getElementById("tarjeta-agua"));
+        crearTarjetaEntrenador(document.getElementById("tarjeta-entrenador"));
       } catch (e) {
         // Antes este error se perdía en silencio
         error.textContent = e.message || "No pudimos cargar tu información.";

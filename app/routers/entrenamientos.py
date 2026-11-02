@@ -47,7 +47,7 @@ def historial(
 ):
     try:
         entrenamientos = historial_service.listar_historial(
-            db, usuario, desde, hasta, limite, offset
+            db, usuario.id, desde, hasta, limite, offset
         )
     except historial_service.PeriodoInvalido:
         raise HTTPException(
@@ -64,7 +64,7 @@ def calendario(
     usuario: Usuario = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return historial_service.calendario_mensual(db, usuario, anio, mes)
+    return historial_service.calendario_mensual(db, usuario.id, anio, mes)
 
 
 @router.post("", response_model=EntrenamientoOut, status_code=status.HTTP_201_CREATED)
