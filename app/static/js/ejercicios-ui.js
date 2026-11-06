@@ -88,6 +88,8 @@ async function crearBuscadorEjercicios(contenedor, { onSeleccionar = null, rende
       tags.append(crearTag(etiquetaGrupo(grupos, ejercicio.grupo_secundario), "secundario"));
     }
     tags.append(crearTag(esPropio ? "Propio" : "Catálogo", esPropio ? "propio" : "catalogo"));
+    tags.append(crearTag(ejercicio.tipo_medicion === "TIEMPO" ? "Por tiempo" : "Por repeticiones", "secundario"));
+    if (ejercicio.usa_peso_corporal) tags.append(crearTag("Peso corporal", "secundario"));
 
     info.append(nombre, tags);
     if (ejercicio.descripcion) {

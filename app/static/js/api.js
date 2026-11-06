@@ -84,6 +84,119 @@ async function irAlDestino(usuario) {
   }
 }
 
+// Navegación visual compartida.
+// No interviene en permisos ni en llamadas al backend.
+function montarNavegacion() {
+  const paginasProtegidas = new Set([
+    "/home.html", "/entrenar.html", "/entrenamiento.html", "/historial.html",
+    "/progreso.html", "/ejercicios.html", "/rutina.html", "/trainer.html",
+    "/cliente.html", "/configuracion.html",
+  ]);
+
+  if (!paginasProtegidas.has(window.location.pathname) || !obtenerToken()) {
+    return;
+  }
+
+  const contenido = document.querySelector("main.pagina, main.pantalla");
+
+  if (!contenido || document.querySelector(".app-sidebar")) {
+    return;
+  }
+
+  const usuario = obtenerUsuario() || {};
+
+  const enlaces = [
+    { href: "/home.html", texto: "Inicio", icono: "⌂" },
+    { href: "/entrenar.html", texto: "Entrenar", icono: "▶" },
+    { href: "/historial.html", texto: "Historial", icono: "▦" },
+    { href: "/ejercicios.html", texto: "Ejercicios", icono: "✣" },
+  ];
+
+  if (usuario.rol === "PERSONAL_TRAINER") {
+    enlaces.push({
+      href: "/trainer.html",
+      texto: "Mis clientes",
+      icono: "♙"
+    });
+  } else {
+    enlaces.splice(3, 0, {
+      href: "/progreso.html",
+      texto: "Progreso",
+      icono: "↗"
+    });
+  }
+
+  enlaces.push({
+    href: "/configuracion.html",
+    texto: "Configuración",
+    icono: "⚙"
+  });
+
+  const sidebar = document.createElement("aside");
+  sidebar.className = "app-sidebar";
+  sidebar.setAttribute("aria-label", "Navegación principal");
+
+  sidebar.innerHTML = `
+    <a class="app-brand" href="/home.html">
+      <span class="app-brand-mark" aria-hidden="true">✳</span>
+      <span>FITNESS<small>PERFORMANCE</small></span>
+    </a>
+    <nav class="app-nav" aria-label="Secciones"></nav>
+    <div class="app-sidebar-footer">
+      <span class="app-sidebar-user"></span>
+      <button class="app-sidebar-logout" type="button">
+        ↗ Cerrar sesión
+      </button>
+    </div>`;
+
+  const nav = sidebar.querySelector(".app-nav");
+
+  enlaces.forEach(({ href, texto, icono }) => {
+    const enlace = document.createElement("a");
+
+    enlace.href = href;
+    enlace.className =
+      window.location.pathname === href ? "activo" : "";
+
+    if (
+      href === "/trainer.html" &&
+      window.location.pathname === "/cliente.html"
+    ) {
+      enlace.classList.add("activo");
+    }
+
+    const iconoNodo = document.createElement("span");
+    iconoNodo.className = "app-nav-icon";
+    iconoNodo.setAttribute("aria-hidden", "true");
+    iconoNodo.textContent = icono;
+
+    const textoNodo = document.createElement("span");
+    textoNodo.textContent = texto;
+
+    enlace.append(iconoNodo, textoNodo);
+    nav.appendChild(enlace);
+  });
+
+  sidebar.querySelector(".app-sidebar-user").textContent =
+    usuario.nombre || "Mi cuenta";
+
+  sidebar
+    .querySelector(".app-sidebar-logout")
+    .addEventListener("click", cerrarSesion);
+
+  const principal = document.createElement("div");
+  principal.className = "app-main";
+
+  document.body.classList.add("app-shell");
+
+  document.body.insertBefore(sidebar, contenido);
+  document.body.insertBefore(principal, contenido);
+
+  principal.appendChild(contenido);
+}
+
+montarNavegacion();
+
 const ETIQUETAS_OBJETIVO = {
   PERDER_PESO: "Perder peso",
   GANAR_MASA_MUSCULAR: "Ganar masa muscular",

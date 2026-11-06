@@ -2,7 +2,7 @@ from datetime import date
 
 from pydantic import BaseModel, Field
 
-from app.models.ejercicio import GrupoMuscular
+from app.models.ejercicio import GrupoMuscular, TipoMedicion
 
 
 # ---------- Peso corporal ----------
@@ -71,8 +71,15 @@ class RepeticionesPesoOut(BaseModel):
     fecha: date
 
 
+class MarcaDuracionOut(BaseModel):
+    duracion_segundos: int
+    fecha: date
+    entrenamiento_id: int
+
+
 class MarcasOut(BaseModel):
     mayor_peso: MarcaPesoOut | None
+    mayor_duracion: MarcaDuracionOut | None
     mejor_volumen_sesion: MarcaVolumenOut | None
     repeticiones_por_peso: list[RepeticionesPesoOut]
 
@@ -84,13 +91,17 @@ class SesionEjercicioOut(BaseModel):
     peso_max_kg: float
     series: int
     repeticiones: int
+    duracion_total_segundos: int
 
 
 class EvolucionEjercicioOut(BaseModel):
     ejercicio_id: int
     nombre: str
     grupo_principal: GrupoMuscular
+    tipo_medicion: TipoMedicion
+    usa_peso_corporal: bool
     volumen_total_kg: float
+    duracion_total_segundos: int
     sesiones: list[SesionEjercicioOut]
     marcas: MarcasOut
 
@@ -99,16 +110,19 @@ class EjercicioEntrenadoOut(BaseModel):
     ejercicio_id: int
     nombre: str
     grupo_principal: GrupoMuscular
+    tipo_medicion: TipoMedicion
+    usa_peso_corporal: bool
     sesiones: int
     ultima_fecha: date
     mayor_peso_kg: float | None
     mejor_volumen_sesion_kg: float | None
+    mayor_duracion_segundos: int | None
 
 
 class PROut(BaseModel):
     ejercicio_id: int
     nombre: str
-    tipo: str  # PESO, VOLUMEN o REPETICIONES
+    tipo: str  # PESO, VOLUMEN, REPETICIONES o DURACION
     valor: float
     anterior: float
     peso_kg: float | None = None  # solo para REPETICIONES

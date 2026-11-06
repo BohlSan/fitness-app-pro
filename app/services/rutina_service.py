@@ -1,6 +1,7 @@
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+from app.models.ejercicio import Ejercicio, TipoMedicion
 from app.models.rutina import DiaRutina, Rutina, RutinaEjercicio
 from app.models.trainer import AsignacionRutina, EstadoAsignacion
 from app.models.usuario import RolUsuario, Usuario
@@ -54,6 +55,7 @@ def copiar_rutina(origen: Rutina, propietario_id: int, autor_id: int) -> Rutina:
                     orden=item.orden,
                     series=item.series,
                     repeticiones=item.repeticiones,
+                    duracion_sugerida_segundos=item.duracion_sugerida_segundos,
                     peso_sugerido_kg=item.peso_sugerido_kg,
                     descanso_segundos=item.descanso_segundos,
                 )
@@ -85,6 +87,26 @@ def _validar_ejercicios(db: Session, usuario: Usuario, rutina: Rutina, datos: Ru
     if nuevos - ejercicio_service.ids_ejercicios_visibles(db, usuario, nuevos):
         raise DatosRutinaInvalidos("Alguno de los ejercicios elegidos no existe")
 
+    ejercicios = {
+        ejercicio.id: ejercicio
+        for ejercicio in db.scalars(select(Ejercicio).where(Ejercicio.id.in_(pedidos)))
+    } if pedidos else {}
+    for dia in datos.dias:
+        for item in dia.ejercicios:
+            ejercicio = ejercicios.get(item.ejercicio_id)
+            if ejercicio is None:
+                raise DatosRutinaInvalidos("Alguno de los ejercicios elegidos no existe")
+            es_tiempo = ejercicio.tipo_medicion == TipoMedicion.TIEMPO
+            tiene_duracion = item.duracion_sugerida_segundos is not None
+            if es_tiempo != tiene_duracion:
+                raise DatosRutinaInvalidos(
+                    "Los ejercicios medidos por tiempo requieren duración; los de fuerza requieren series y repeticiones"
+                )
+            if ejercicio.usa_peso_corporal and item.peso_sugerido_kg is not None:
+                raise DatosRutinaInvalidos(
+                    "El peso de los ejercicios con peso corporal se toma automáticamente del perfil"
+                )
+
 
 def _sincronizar_ejercicios(dia: DiaRutina, ejercicios_in: list[EjercicioRutinaIn]) -> None:
     actuales = {item.id: item for item in dia.ejercicios}
@@ -106,6 +128,7 @@ def _sincronizar_ejercicios(dia: DiaRutina, ejercicios_in: list[EjercicioRutinaI
         item.orden = posicion
         item.series = ejercicio_in.series
         item.repeticiones = ejercicio_in.repeticiones
+        item.duracion_sugerida_segundos = ejercicio_in.duracion_sugerida_segundos
         item.peso_sugerido_kg = ejercicio_in.peso_sugerido_kg
         item.descanso_segundos = ejercicio_in.descanso_segundos
 

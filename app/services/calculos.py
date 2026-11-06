@@ -1,22 +1,29 @@
 from collections import Counter, namedtuple
 from datetime import date, timedelta
 
-# Una serie realizada. Cualquier objeto con estos atributos sirve (por ejemplo, una fila de SQL)
-FilaSerie = namedtuple("FilaSerie", "entrenamiento_id fecha peso_kg repeticiones")
+# Un registro realizado. Los campos nuevos tienen default para conservar compatibilidad
+# con los tests y llamadas que todavía construyen filas de fuerza con cuatro argumentos.
+FilaSerie = namedtuple(
+    "FilaSerie",
+    "entrenamiento_id fecha peso_kg repeticiones duracion_segundos tipo_medicion",
+    defaults=[None, None],
+)
 
 # Por debajo de este cambio semanal, el peso se considera estable
 UMBRAL_TENDENCIA_ESTABLE_KG_SEMANA = 0.1
 
 
-def volumen_serie(peso_kg: float | None, repeticiones: int) -> float:
+def volumen_serie(peso_kg: float | None, repeticiones: int | None) -> float:
+    if repeticiones is None:
+        return 0.0  # Los registros por tiempo no generan volumen de fuerza.
     return float(peso_kg or 0) * repeticiones
 
 
 def volumen_series(series) -> float:
-    """Volumen = Σ (peso × repeticiones) de las series completadas (RF-23).
+    """Volumen = Σ (peso × repeticiones) de registros completados (RF-23).
 
-    Funciona con cualquier objeto que tenga peso_kg, repeticiones y completada.
-    Las series sin peso (peso corporal) aportan 0.
+    El peso corporal ya se guarda como peso_kg en cada serie. Los ejercicios por
+    tiempo no tienen repeticiones y, por lo tanto, no suman volumen.
     """
     return sum(volumen_serie(s.peso_kg, s.repeticiones) for s in series if s.completada)
 
@@ -76,12 +83,14 @@ def volumen_por_sesion(filas) -> list[dict]:
                 "peso_max_kg": 0.0,
                 "series": 0,
                 "repeticiones": 0,
+                "duracion_total_segundos": 0,
             },
         )
-        sesion["volumen_kg"] += _peso(fila) * fila.repeticiones
+        sesion["volumen_kg"] += volumen_serie(fila.peso_kg, fila.repeticiones)
         sesion["peso_max_kg"] = max(sesion["peso_max_kg"], _peso(fila))
         sesion["series"] += 1
-        sesion["repeticiones"] += fila.repeticiones
+        sesion["repeticiones"] += fila.repeticiones or 0
+        sesion["duracion_total_segundos"] += fila.duracion_segundos or 0
 
     resultado = list(sesiones.values())
     for sesion in resultado:
@@ -96,6 +105,8 @@ def mejores_marcas(filas) -> dict:
     mayor_peso = None
     por_peso: dict[float, dict] = {}
     for fila in ordenadas:
+        if fila.repeticiones is None:
+            continue
         peso = _peso(fila)
         if peso > 0 and (
             mayor_peso is None
@@ -111,6 +122,16 @@ def mejores_marcas(filas) -> dict:
         if actual is None or fila.repeticiones > actual["repeticiones"]:
             por_peso[peso] = {"peso_kg": peso, "repeticiones": fila.repeticiones, "fecha": fila.fecha}
 
+    mayor_duracion = None
+    for fila in ordenadas:
+        duracion = fila.duracion_segundos or 0
+        if duracion > 0 and (mayor_duracion is None or duracion > mayor_duracion["duracion_segundos"]):
+            mayor_duracion = {
+                "duracion_segundos": duracion,
+                "fecha": fila.fecha,
+                "entrenamiento_id": fila.entrenamiento_id,
+            }
+
     mejor_volumen = None
     for sesion in volumen_por_sesion(ordenadas):
         if sesion["volumen_kg"] > 0 and (
@@ -124,6 +145,7 @@ def mejores_marcas(filas) -> dict:
 
     return {
         "mayor_peso": mayor_peso,
+        "mayor_duracion": mayor_duracion,
         "mejor_volumen_sesion": mejor_volumen,
         "repeticiones_por_peso": sorted(por_peso.values(), key=lambda m: -m["peso_kg"]),
     }
@@ -137,11 +159,12 @@ def detectar_prs(previas, sesion) -> list[dict]:
     marcas = mejores_marcas(previas)
     prs = []
 
-    peso_max = max(_peso(f) for f in sesion)
+    filas_fuerza = [f for f in sesion if f.repeticiones is not None]
+    peso_max = max((_peso(f) for f in filas_fuerza), default=0)
     if marcas["mayor_peso"] and peso_max > marcas["mayor_peso"]["peso_kg"]:
         prs.append({"tipo": "PESO", "valor": peso_max, "anterior": marcas["mayor_peso"]["peso_kg"]})
 
-    volumen = round(sum(_peso(f) * f.repeticiones for f in sesion), 2)
+    volumen = round(sum(_peso(f) * (f.repeticiones or 0) for f in filas_fuerza), 2)
     if marcas["mejor_volumen_sesion"] and volumen > marcas["mejor_volumen_sesion"]["volumen_kg"]:
         prs.append(
             {"tipo": "VOLUMEN", "valor": volumen, "anterior": marcas["mejor_volumen_sesion"]["volumen_kg"]}
@@ -149,7 +172,7 @@ def detectar_prs(previas, sesion) -> list[dict]:
 
     reps_previas = {m["peso_kg"]: m["repeticiones"] for m in marcas["repeticiones_por_peso"]}
     reps_hoy: dict[float, int] = {}
-    for fila in sesion:
+    for fila in filas_fuerza:
         peso = _peso(fila)
         if peso > 0:
             reps_hoy[peso] = max(reps_hoy.get(peso, 0), fila.repeticiones)
@@ -158,6 +181,16 @@ def detectar_prs(previas, sesion) -> list[dict]:
             prs.append(
                 {"tipo": "REPETICIONES", "peso_kg": peso, "valor": reps, "anterior": reps_previas[peso]}
             )
+    mayor_duracion_previa = marcas["mayor_duracion"]["duracion_segundos"] if marcas["mayor_duracion"] else None
+    mayor_duracion_sesion = max((f.duracion_segundos or 0 for f in sesion), default=0)
+    if mayor_duracion_sesion > 0 and (
+        mayor_duracion_previa is None or mayor_duracion_sesion > mayor_duracion_previa
+    ):
+        prs.append({
+            "tipo": "DURACION",
+            "valor": mayor_duracion_sesion,
+            "anterior": mayor_duracion_previa or 0,
+        })
     return prs
 
 

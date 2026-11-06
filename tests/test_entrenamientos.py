@@ -327,3 +327,127 @@ def test_un_ejercicio_con_historial_no_se_puede_eliminar(client, headers_usuario
     response = client.delete(f"/ejercicios/{propio['id']}", headers=headers_usuario)
 
     assert response.status_code == 409
+
+
+def test_cardio_se_registra_por_duracion_y_no_suma_volumen(client, headers_usuario):
+    cardio = client.post(
+        "/ejercicios",
+        json={"nombre": "Cinta de prueba", "grupo_principal": "CARDIO", "tipo_medicion": "TIEMPO"},
+        headers=headers_usuario,
+    ).json()
+    entrenamiento = iniciar_libre(client, headers_usuario).json()
+    url = f"/entrenamientos/{entrenamiento['id']}"
+
+    invalido = client.put(
+        url,
+        json={"ejercicios": [{"ejercicio_id": cardio["id"], "series": [
+            {"duracion_segundos": 300, "completada": True},
+            {"duracion_segundos": 300, "completada": True},
+        ]}]},
+        headers=headers_usuario,
+    )
+    assert invalido.status_code == 422
+
+    guardado = client.put(
+        url,
+        json={"ejercicios": [{"ejercicio_id": cardio["id"], "series": [
+            {"duracion_segundos": 600, "completada": True},
+        ]}]},
+        headers=headers_usuario,
+    )
+    assert guardado.status_code == 200
+    registro = guardado.json()["ejercicios"][0]["series"][0]
+    assert registro["repeticiones"] is None
+    assert registro["peso_kg"] is None
+    assert registro["duracion_segundos"] == 600
+
+    finalizado = client.post(f"{url}/finalizar", json={}, headers=headers_usuario).json()
+    assert finalizado["volumen_total_kg"] == 0
+
+    evolucion = client.get(f"/estadisticas/ejercicios/{cardio['id']}", headers=headers_usuario)
+    assert evolucion.status_code == 200
+    assert evolucion.json()["tipo_medicion"] == "TIEMPO"
+    assert evolucion.json()["duracion_total_segundos"] == 600
+    assert evolucion.json()["volumen_total_kg"] == 0
+    assert evolucion.json()["marcas"]["mayor_duracion"]["duracion_segundos"] == 600
+
+
+def test_el_cardio_de_una_rutina_inicia_con_un_registro_de_duracion(client, headers_usuario):
+    cardio = client.post(
+        "/ejercicios",
+        json={"nombre": "Bicicleta de prueba", "grupo_principal": "CARDIO", "tipo_medicion": "TIEMPO"},
+        headers=headers_usuario,
+    ).json()
+    rutina = client.post(
+        "/rutinas",
+        json={"nombre": "Cardio", "dias": [{
+            "dia_semana": "LUNES",
+            "nombre": "Resistencia",
+            "ejercicios": [{"ejercicio_id": cardio["id"], "duracion_sugerida_segundos": 900}],
+        }]},
+        headers=headers_usuario,
+    ).json()
+
+    entrenamiento = client.post(
+        "/entrenamientos",
+        json={"rutina_id": rutina["id"], "dia_id": rutina["dias"][0]["id"]},
+        headers=headers_usuario,
+    )
+
+    assert entrenamiento.status_code == 201
+    series = entrenamiento.json()["ejercicios"][0]["series"]
+    assert len(series) == 1
+    assert series[0]["duracion_segundos"] == 900
+    assert series[0]["repeticiones"] is None
+
+
+def test_el_peso_corporal_se_copia_a_la_serie_y_no_cambia_con_el_perfil(
+    client, headers_usuario
+):
+    perfil = {
+        "fecha_nacimiento": "1998-05-20",
+        "genero": "MASCULINO",
+        "altura_cm": 178,
+        "peso_actual_kg": 82.5,
+        "objetivo": "GANAR_MASA_MUSCULAR",
+        "dias_entrenamiento_semana": 4,
+        "unidad_hidratacion": "ML",
+    }
+    assert client.post("/perfil", json=perfil, headers=headers_usuario).status_code == 201
+    ejercicio = client.post(
+        "/ejercicios",
+        json={"nombre": "Dominada asistida-test", "grupo_principal": "ESPALDA", "usa_peso_corporal": True},
+        headers=headers_usuario,
+    ).json()
+    entrenamiento = iniciar_libre(client, headers_usuario).json()
+    url = f"/entrenamientos/{entrenamiento['id']}"
+
+    primera = client.put(
+        url,
+        json={"ejercicios": [{"ejercicio_id": ejercicio["id"], "series": [
+            {"peso_kg": None, "repeticiones": 5, "completada": True},
+        ]}]},
+        headers=headers_usuario,
+    ).json()
+    serie_guardada = primera["ejercicios"][0]["series"][0]
+    assert serie_guardada["peso_kg"] == 82.5
+
+    assert client.patch("/perfil", json={"peso_actual_kg": 90}, headers=headers_usuario).status_code == 200
+    segunda = client.put(
+        url,
+        json={"ejercicios": [{
+            "id": primera["ejercicios"][0]["id"],
+            "ejercicio_id": ejercicio["id"],
+            "series": [{
+                "id": serie_guardada["id"],
+                "peso_kg": None,
+                "repeticiones": 5,
+                "completada": True,
+            }],
+        }]},
+        headers=headers_usuario,
+    ).json()
+    assert segunda["ejercicios"][0]["series"][0]["peso_kg"] == 82.5
+
+    finalizado = client.post(f"{url}/finalizar", json={}, headers=headers_usuario).json()
+    assert finalizado["volumen_total_kg"] == 412.5

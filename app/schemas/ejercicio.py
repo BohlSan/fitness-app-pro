@@ -7,7 +7,7 @@ from pydantic import (
     model_validator,
 )
 
-from app.models.ejercicio import GrupoMuscular
+from app.models.ejercicio import GrupoMuscular, TipoMedicion
 
 
 def _limpiar_texto(valor: str | None) -> str | None:
@@ -22,6 +22,8 @@ class EjercicioCreate(BaseModel):
     descripcion: str | None = Field(default=None, max_length=500)
     grupo_principal: GrupoMuscular
     grupo_secundario: GrupoMuscular | None = None
+    tipo_medicion: TipoMedicion = TipoMedicion.REPETICIONES
+    usa_peso_corporal: bool = False
 
     @field_validator("nombre")
     @classmethod
@@ -40,7 +42,10 @@ class EjercicioCreate(BaseModel):
     def grupos_distintos(self):
         if self.grupo_secundario is not None and self.grupo_secundario == self.grupo_principal:
             raise ValueError("El grupo secundario debe ser distinto del principal")
+        if self.usa_peso_corporal and self.tipo_medicion == TipoMedicion.TIEMPO:
+            raise ValueError("El peso corporal solo se puede usar en ejercicios por repeticiones")
         return self
+
 
 
 class EjercicioUpdate(BaseModel):
@@ -48,6 +53,8 @@ class EjercicioUpdate(BaseModel):
     descripcion: str | None = Field(default=None, max_length=500)
     grupo_principal: GrupoMuscular | None = None
     grupo_secundario: GrupoMuscular | None = None
+    tipo_medicion: TipoMedicion | None = None
+    usa_peso_corporal: bool | None = None
 
     @field_validator("nombre")
     @classmethod
@@ -73,6 +80,8 @@ class EjercicioOut(BaseModel):
     descripcion: str | None
     grupo_principal: GrupoMuscular
     grupo_secundario: GrupoMuscular | None
+    tipo_medicion: TipoMedicion
+    usa_peso_corporal: bool
     creador_id: int | None
 
     @computed_field

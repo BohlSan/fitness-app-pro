@@ -97,6 +97,43 @@ def test_un_periodo_invertido_devuelve_422(client, headers_usuario):
     assert response.status_code == 422
 
 
+def test_calendario_muestra_todas_las_rutinas_previstas_en_un_dia(
+    client, headers_usuario, headers_otro_usuario
+):
+    for nombre in ("Fuerza A", "Cardio B"):
+        creada = client.post(
+            "/rutinas",
+            json={"nombre": nombre, "dias": [{
+                "dia_semana": "LUNES", "nombre": f"Día {nombre}", "ejercicios": []
+            }]},
+            headers=headers_usuario,
+        )
+        assert creada.status_code == 201
+
+    ajena = client.post(
+        "/rutinas",
+        json={"nombre": "Rutina ajena", "dias": [{
+            "dia_semana": "LUNES", "nombre": "Lunes", "ejercicios": []
+        }]},
+        headers=headers_otro_usuario,
+    )
+    assert ajena.status_code == 201
+
+    response = client.get(
+        "/entrenamientos/calendario/planificados",
+        params={"anio": 2026, "mes": 10},
+        headers=headers_usuario,
+    )
+
+    assert response.status_code == 200
+    assert [dia["fecha"] for dia in response.json()] == [
+        "2026-10-05", "2026-10-12", "2026-10-19", "2026-10-26"
+    ]
+    for dia in response.json():
+        assert {rutina["rutina_nombre"] for rutina in dia["rutinas"]} == {"Fuerza A", "Cardio B"}
+        assert len(dia["rutinas"]) == 2
+
+
 def test_el_historial_se_pagina(client, db, ejercicios, headers_usuario):
     for fecha in [date(2026, 10, 1), date(2026, 10, 2), date(2026, 10, 3)]:
         entrenamiento_finalizado(client, db, headers_usuario, ejercicios[0], fecha)

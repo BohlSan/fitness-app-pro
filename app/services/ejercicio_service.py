@@ -1,7 +1,7 @@
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
-from app.models.ejercicio import Ejercicio, GrupoMuscular
+from app.models.ejercicio import Ejercicio, GrupoMuscular, TipoMedicion
 from app.models.entrenamiento import EjercicioEntrenamiento
 from app.models.rutina import RutinaEjercicio
 from app.models.usuario import Usuario
@@ -99,9 +99,35 @@ def actualizar_ejercicio(
     ejercicio = obtener_ejercicio(db, usuario, ejercicio_id)
     _exigir_propio(ejercicio, usuario)
 
+    cambia_medicion = (
+        cambios.tipo_medicion is not None and cambios.tipo_medicion != ejercicio.tipo_medicion
+    )
+    cambia_peso_corporal = (
+        cambios.usa_peso_corporal is not None
+        and cambios.usa_peso_corporal != ejercicio.usa_peso_corporal
+    )
+    if cambia_medicion or cambia_peso_corporal:
+        esta_en_uso = db.scalar(
+            select(RutinaEjercicio.id).where(RutinaEjercicio.ejercicio_id == ejercicio.id).limit(1)
+        ) or db.scalar(
+            select(EjercicioEntrenamiento.id)
+            .where(EjercicioEntrenamiento.ejercicio_id == ejercicio.id)
+            .limit(1)
+        )
+        if esta_en_uso and cambia_medicion:
+            raise DatosEjercicioInvalidos(
+                "No se puede cambiar el tipo de medición de un ejercicio que ya está en uso"
+            )
+        if esta_en_uso and cambia_peso_corporal:
+            raise DatosEjercicioInvalidos(
+                "No se puede cambiar el uso del peso corporal de un ejercicio que ya está en uso"
+            )
+
     for campo, valor in cambios.model_dump(exclude_unset=True).items():
         # nombre y grupo principal no admiten null; los otros dos sí (para borrarlos)
-        if valor is None and campo in ("nombre", "grupo_principal"):
+        if valor is None and campo in (
+            "nombre", "grupo_principal", "tipo_medicion", "usa_peso_corporal"
+        ):
             continue
         setattr(ejercicio, campo, valor)
 
@@ -112,6 +138,10 @@ def actualizar_ejercicio(
         ):
             raise DatosEjercicioInvalidos(
                 "El grupo secundario debe ser distinto del principal"
+            )
+        if ejercicio.usa_peso_corporal and ejercicio.tipo_medicion == TipoMedicion.TIEMPO:
+            raise DatosEjercicioInvalidos(
+                "El peso corporal solo se puede usar en ejercicios por repeticiones"
             )
         _verificar_nombre_libre(db, usuario, ejercicio.nombre, excluir_id=ejercicio.id)
     except (DatosEjercicioInvalidos, NombreDuplicado):

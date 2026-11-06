@@ -10,10 +10,22 @@ from app.schemas.ejercicio import EjercicioOut
 class EjercicioRutinaIn(BaseModel):
     id: int | None = None  # con id: se actualiza; sin id: se crea
     ejercicio_id: int
-    series: int = Field(ge=1, le=20)
-    repeticiones: int = Field(ge=1, le=100)
+    series: int | None = Field(default=None, ge=1, le=20)
+    repeticiones: int | None = Field(default=None, ge=1, le=100)
+    duracion_sugerida_segundos: int | None = Field(default=None, ge=1, le=86400)
     peso_sugerido_kg: float | None = Field(default=None, ge=0, le=1000)
     descanso_segundos: int | None = Field(default=None, ge=0, le=3600)
+
+    @model_validator(mode="after")
+    def validar_tipo_de_registro(self):
+        es_tiempo = self.duracion_sugerida_segundos is not None
+        if es_tiempo and (self.series is not None or self.repeticiones is not None):
+            raise ValueError("Un ejercicio por tiempo no lleva series ni repeticiones")
+        if es_tiempo and (self.peso_sugerido_kg is not None or self.descanso_segundos is not None):
+            raise ValueError("Un ejercicio por tiempo no lleva peso ni descanso por serie")
+        if not es_tiempo and (self.series is None or self.repeticiones is None):
+            raise ValueError("Indicá series y repeticiones para ejercicios de fuerza")
+        return self
 
 
 class DiaRutinaIn(BaseModel):
@@ -65,8 +77,9 @@ class EjercicioRutinaOut(BaseModel):
 
     id: int
     orden: int
-    series: int
-    repeticiones: int
+    series: int | None
+    repeticiones: int | None
+    duracion_sugerida_segundos: int | None
     peso_sugerido_kg: float | None
     descanso_segundos: int | None
     ejercicio: EjercicioOut

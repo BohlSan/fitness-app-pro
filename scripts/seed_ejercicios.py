@@ -2,12 +2,69 @@ from sqlalchemy import select
 
 import app.models  # noqa: F401  (registra los modelos en la metadata)
 from app.database import SessionLocal
-from app.models.ejercicio import Ejercicio
-from app.models.ejercicio import GrupoMuscular as G
+from app.models.ejercicio import Ejercicio, GrupoMuscular as G, TipoMedicion
+from app.models.entrenamiento import EjercicioEntrenamiento
+from app.models.rutina import RutinaEjercicio
 from app.schemas.ejercicio import EjercicioCreate
 from app.services.ejercicio_factory import EjercicioFactory
 
 # (nombre, grupo principal, grupo secundario, descripción)
+EJERCICIOS_PESO_CORPORAL = {
+    "Flexiones de brazos",
+    "Fondos en paralelas",
+    "Dominadas",
+    "Fondos en banco",
+}
+
+# El catálogo inicial marca como temporizados los ejercicios de cardio.
+# Los isométricos también pueden crearse por tiempo desde la interfaz.
+EJERCICIOS_POR_TIEMPO = {"Cinta de correr", "Bicicleta fija", "Saltar la cuerda"}
+
+
+def _esta_en_uso(db, ejercicio_id: int) -> bool:
+    """No cambia la semántica de ejercicios que ya tienen rutinas o historial."""
+    en_rutina = db.scalar(
+        select(RutinaEjercicio.id)
+        .where(RutinaEjercicio.ejercicio_id == ejercicio_id)
+        .limit(1)
+    )
+    en_historial = db.scalar(
+        select(EjercicioEntrenamiento.id)
+        .where(EjercicioEntrenamiento.ejercicio_id == ejercicio_id)
+        .limit(1)
+    )
+    return en_rutina is not None or en_historial is not None
+
+
+def _crear_o_actualizar_variante(
+    db,
+    existentes: dict[str, Ejercicio],
+    ejercicio: Ejercicio,
+    nombre: str,
+    tipo: TipoMedicion,
+    usa_peso: bool,
+) -> bool:
+    """Crea la variante nueva o sincroniza una ya sembrada. Devuelve True si la creó."""
+    variante = existentes.get(nombre)
+    if variante is None:
+        datos = EjercicioCreate(
+            nombre=nombre,
+            descripcion=ejercicio.descripcion,
+            grupo_principal=ejercicio.grupo_principal,
+            grupo_secundario=ejercicio.grupo_secundario,
+            tipo_medicion=tipo,
+            usa_peso_corporal=usa_peso,
+        )
+        variante = EjercicioFactory.crear_base(datos)
+        db.add(variante)
+        existentes[nombre] = variante
+        return True
+
+    variante.tipo_medicion = tipo
+    variante.usa_peso_corporal = usa_peso
+    return False
+
+
 CATALOGO = [
     # Pecho
     ("Press de banca plano", G.PECHO, G.TRICEPS, "Acostado en el banco, bajá la barra hasta el pecho y empujala hacia arriba."),
@@ -84,11 +141,54 @@ def main():
                 descripcion=descripcion,
                 grupo_principal=principal,
                 grupo_secundario=secundario,
+                tipo_medicion=(
+                    TipoMedicion.TIEMPO
+                    if nombre in EJERCICIOS_POR_TIEMPO
+                    else TipoMedicion.REPETICIONES
+                ),
+                usa_peso_corporal=nombre in EJERCICIOS_PESO_CORPORAL,
             )
             db.add(EjercicioFactory.crear_base(datos))
             nuevos += 1
+        # Sincroniza los ejercicios especiales ya existentes sin reinterpretar su historial.
+        existentes_por_nombre = {
+            ejercicio.nombre: ejercicio
+            for ejercicio in db.scalars(
+                select(Ejercicio).where(Ejercicio.creador_id.is_(None))
+            )
+        }
+        for nombre in EJERCICIOS_POR_TIEMPO | EJERCICIOS_PESO_CORPORAL:
+            ejercicio = existentes_por_nombre.get(nombre)
+            if ejercicio is None:
+                continue
+            tipo_deseado = (
+                TipoMedicion.TIEMPO
+                if nombre in EJERCICIOS_POR_TIEMPO
+                else TipoMedicion.REPETICIONES
+            )
+            peso_deseado = nombre in EJERCICIOS_PESO_CORPORAL
+            cambia_tipo = ejercicio.tipo_medicion != tipo_deseado
+            cambia_peso = ejercicio.usa_peso_corporal != peso_deseado
+
+            if (cambia_tipo or cambia_peso) and _esta_en_uso(db, ejercicio.id):
+                sufijo = "por tiempo" if tipo_deseado == TipoMedicion.TIEMPO else "peso corporal"
+                nombre_variante = f"{nombre} ({sufijo})"
+                creados = _crear_o_actualizar_variante(
+                    db,
+                    existentes_por_nombre,
+                    ejercicio,
+                    nombre_variante,
+                    tipo_deseado,
+                    peso_deseado,
+                )
+                nuevos += int(creados)
+                continue
+
+            ejercicio.tipo_medicion = tipo_deseado
+            ejercicio.usa_peso_corporal = peso_deseado
+
         db.commit()
-    print(f"Catálogo listo: {nuevos} ejercicios nuevos, {len(CATALOGO) - nuevos} ya existían.")
+    print(f"Catálogo listo: {nuevos} ejercicios nuevos; tipos y cargas sincronizados sin alterar el historial.")
 
 
 if __name__ == "__main__":

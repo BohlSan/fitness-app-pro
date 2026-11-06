@@ -83,11 +83,14 @@ function desdeRespuesta(entrenamiento) {
       ejercicio_id: item.ejercicio.id,
       nombre: item.ejercicio.nombre,
       grupo: item.ejercicio.grupo_principal,
+      tipoMedicion: item.ejercicio.tipo_medicion,
+      usaPesoCorporal: item.ejercicio.usa_peso_corporal,
       notas: item.notas || "",
       series: item.series.map((serie) => ({
         id: serie.id,
         peso: serie.peso_kg ?? "",
         reps: serie.repeticiones,
+        duracionSegundos: serie.duracion_segundos,
         completada: serie.completada,
       })),
     })),
@@ -105,15 +108,35 @@ function armarCuerpo() {
   const ejercicios = [];
   for (const ejercicio of estado.ejercicios) {
     const series = [];
+    const esTiempo = ejercicio.tipoMedicion === "TIEMPO";
     for (const serie of ejercicio.series) {
+      if (esTiempo) {
+        const duracion = Number(serie.duracionSegundos);
+        if (!Number.isInteger(duracion) || duracion < 1 || duracion > 86400) return null;
+        series.push({
+          id: serie.id ?? null,
+          peso_kg: null,
+          repeticiones: null,
+          duracion_segundos: duracion,
+          completada: !!serie.completada,
+        });
+        continue;
+      }
+
       const reps = Number(serie.reps);
       if (!Number.isInteger(reps) || reps < 1 || reps > 200) return null;
       let peso = null;
-      if (serie.peso !== "" && serie.peso !== null) {
+      if (!ejercicio.usaPesoCorporal && serie.peso !== "" && serie.peso !== null) {
         peso = Number(serie.peso);
         if (Number.isNaN(peso) || peso < 0 || peso > 1000) return null;
       }
-      series.push({ id: serie.id ?? null, peso_kg: peso, repeticiones: reps, completada: !!serie.completada });
+      series.push({
+        id: serie.id ?? null,
+        peso_kg: peso,
+        repeticiones: reps,
+        duracion_segundos: null,
+        completada: !!serie.completada,
+      });
     }
     ejercicios.push({
       id: ejercicio.id ?? null,
@@ -132,7 +155,11 @@ function fusionarIds(respuesta) {
     const remoto = respuesta.ejercicios[i];
     ejercicio.id = remoto.id;
     if (remoto.series.length === ejercicio.series.length) {
-      ejercicio.series.forEach((serie, j) => { serie.id = remoto.series[j].id; });
+      ejercicio.series.forEach((serie, j) => {
+        serie.id = remoto.series[j].id;
+        serie.peso = remoto.series[j].peso_kg ?? "";
+        serie.duracionSegundos = remoto.series[j].duracion_segundos;
+      });
     }
   });
 }
@@ -145,7 +172,7 @@ async function guardar() {
   }
   const cuerpo = armarCuerpo();
   if (!cuerpo) {
-    estadoGuardado.textContent = "Revisá repeticiones y pesos para poder guardar";
+    estadoGuardado.textContent = "Revisá los datos de duración, repeticiones y pesos para guardar";
     return false;
   }
 
@@ -194,10 +221,11 @@ function botonIcono(simbolo, titulo, accion, extra = "") {
   });
 }
 
-function filaSerie(serie, indice) {
+function filaSerie(serie, indice, ejercicio) {
   const peso = el("input", {
     type: "number", min: 0, max: 1000, step: 0.5, inputmode: "decimal",
     value: serie.peso, placeholder: "—", "aria-label": `Peso de la serie ${indice + 1}`,
+    disabled: ejercicio.usaPesoCorporal,
     oninput: (evento) => { serie.peso = evento.target.value; cambio(); },
   });
   const reps = el("input", {
@@ -225,6 +253,37 @@ function filaSerie(serie, indice) {
   );
 }
 
+function filaTiempo(serie) {
+  const minutos = serie.duracionSegundos === null || serie.duracionSegundos === undefined
+    ? ""
+    : Number((serie.duracionSegundos / 60).toFixed(2));
+  const entrada = el("input", {
+    type: "number", min: 0.5, max: 1440, step: 0.5, inputmode: "decimal",
+    value: minutos, placeholder: "Minutos", "aria-label": "Duración en minutos",
+    oninput: (evento) => {
+      const valor = evento.target.value;
+      serie.duracionSegundos = valor === "" ? null : Math.round(Number(valor) * 60);
+      cambio();
+    },
+  });
+  const check = el("button", {
+    type: "button",
+    class: "check-serie" + (serie.completada ? " hecha" : ""),
+    title: "Marcar como hecha",
+    "aria-pressed": String(serie.completada),
+    text: serie.completada ? "✓" : "",
+    onclick: () => {
+      serie.completada = !serie.completada;
+      cambio();
+      pintarEjercicios();
+    },
+  });
+  return el("div", { class: "fila-tiempo" },
+    el("label", { class: "campo-chico" }, "Duración (min)", entrada),
+    check
+  );
+}
+
 function tarjetaEjercicio(ejercicio, indice) {
   const cabecera = el(
     "div",
@@ -241,6 +300,21 @@ function tarjetaEjercicio(ejercicio, indice) {
       pintarEjercicios();
     }, "peligro")
   );
+
+  if (ejercicio.tipoMedicion === "TIEMPO") {
+    const notas = el("textarea", {
+      rows: 1, maxlength: 500, placeholder: "Notas (opcional)", text: ejercicio.notas,
+      oninput: (evento) => { ejercicio.notas = evento.target.value; cambio(); },
+    });
+    return el(
+      "div",
+      { class: "ej-tarjeta ejercicio-tiempo" },
+      cabecera,
+      el("p", { class: "rutina-meta", text: "Registrá el tiempo total realizado. Este ejercicio no suma volumen de fuerza." }),
+      ...ejercicio.series.map(filaTiempo),
+      notas
+    );
+  }
 
   const encabezado = el(
     "div",
@@ -284,9 +358,16 @@ function tarjetaEjercicio(ejercicio, indice) {
   return el(
     "div",
     { class: "ej-tarjeta" },
-    cabecera, encabezado, ...ejercicio.series.map(filaSerie), accionesSeries, notas
+    cabecera,
+    ...(ejercicio.usaPesoCorporal
+      ? [el("p", { class: "rutina-meta", text: perfil && perfil.peso_actual_kg
+          ? `Carga automática: ${perfil.peso_actual_kg} kg (peso de tu perfil)`
+          : "No hay un peso cargado en tu perfil; el volumen no podrá calcularse hasta registrarlo." })]
+      : []),
+    encabezado, ...ejercicio.series.map((serie, i) => filaSerie(serie, i, ejercicio)), accionesSeries, notas
   );
 }
+
 
 function pintarEjercicios() {
   if (!estado.ejercicios.length) {
@@ -371,21 +452,21 @@ async function abrirFinalizar() {
   mostrarError("");
   const guardado = await guardarYEsperar();
   if (!guardado) {
-    mostrarError("Revisá los datos de las series antes de terminar.");
+    mostrarError("Revisá los datos de duración, repeticiones y pesos antes de terminar.");
     return;
   }
 
   const todas = estado.ejercicios.reduce((suma, e) => suma + e.series.length, 0);
   const hechas = estado.ejercicios.reduce((suma, e) => suma + e.series.filter((s) => s.completada).length, 0);
   if (hechas === 0) {
-    mostrarError("Marcá al menos una serie como hecha para terminar.");
+    mostrarError("Marcá al menos un ejercicio o registro como hecho para terminar.");
     return;
   }
 
   document.getElementById("aviso-series").textContent =
     todas > hechas
-      ? `${hechas} serie${hechas === 1 ? "" : "s"} hecha${hechas === 1 ? "" : "s"}. Las ${todas - hechas} sin completar no se van a guardar.`
-      : `${hechas} serie${hechas === 1 ? "" : "s"} hecha${hechas === 1 ? "" : "s"}. ¡Bien ahí!`;
+      ? `${hechas} registro${hechas === 1 ? "" : "s"} completado${hechas === 1 ? "" : "s"}. Los ${todas - hechas} pendientes no se van a guardar.`
+      : `${hechas} registro${hechas === 1 ? "" : "s"} completado${hechas === 1 ? "" : "s"}. ¡Bien ahí!`;
 
   cierre = { aguaMl: null, dificultad: null, cansancio: null, animo: null };
   errorFinalizar.textContent = "";
@@ -435,7 +516,7 @@ function mostrarResumen(entrenamiento) {
   document.getElementById("resumen-datos").replaceChildren(
     datoResumen(formatoDuracion(entrenamiento.duracion_segundos || 0), "Duración"),
     datoResumen(`${entrenamiento.volumen_total_kg} kg`, "Volumen total"),
-    datoResumen(String(entrenamiento.series_completadas), "Series completadas"),
+    datoResumen(String(entrenamiento.series_completadas), "Registros completados"),
     datoResumen(entrenamiento.agua_ml ? `${entrenamiento.agua_ml} ml` : "—", "Agua")
   );
 
@@ -456,18 +537,21 @@ function mostrarResumen(entrenamiento) {
 
   document.getElementById("resumen-ejercicios").replaceChildren(
     ...entrenamiento.ejercicios.map((item) => {
+      const esTiempo = item.ejercicio.tipo_medicion === "TIEMPO";
       const cabecera = el(
         "div",
         { class: "resumen-cabecera" },
         el("strong", { text: item.ejercicio.nombre }),
-        el("span", { text: `${item.volumen_kg} kg de volumen` })
+        el("span", { text: esTiempo ? "Por tiempo · sin volumen" : `${item.volumen_kg} kg de volumen` })
       );
       const series = el(
         "ul",
         { class: "series-detalle" },
-        ...item.series.map((serie) =>
-          el("li", { text: `Serie ${serie.numero}: ${serie.peso_kg ?? "—"} kg × ${serie.repeticiones}` })
-        )
+        ...item.series.map((serie) => el("li", {
+          text: esTiempo
+            ? `Duración: ${formatoDuracion(serie.duracion_segundos || 0)}`
+            : `Serie ${serie.numero}: ${serie.peso_kg ?? "—"} kg × ${serie.repeticiones}`
+        }))
       );
       const hijos = [cabecera, series];
       if (item.notas) hijos.push(el("p", { class: "rutina-meta", text: `📝 ${item.notas}` }));
@@ -485,6 +569,9 @@ function textoRecord(pr) {
   }
   if (pr.tipo === "VOLUMEN") {
     return `Nuevo récord de volumen en ${pr.nombre}: ${pr.valor} kg en una sesión (antes ${pr.anterior} kg)`;
+  }
+  if (pr.tipo === "DURACION") {
+    return `Nuevo récord de duración en ${pr.nombre}: ${formatoDuracion(pr.valor)} (antes ${formatoDuracion(pr.anterior)})`;
   }
   return `Nuevo récord en ${pr.nombre}: ${pr.valor} repeticiones con ${pr.peso_kg} kg (antes ${pr.anterior})`;
 }
@@ -515,8 +602,12 @@ document.getElementById("agregar-ejercicio").addEventListener("click", () => {
       ejercicio_id: elegido.id,
       nombre: elegido.nombre,
       grupo: elegido.grupo_principal,
+      tipoMedicion: elegido.tipo_medicion,
+      usaPesoCorporal: elegido.usa_peso_corporal,
       notas: "",
-      series: [{ id: null, peso: "", reps: 10, completada: false }],
+      series: [elegido.tipo_medicion === "TIEMPO"
+        ? { id: null, peso: "", reps: null, duracionSegundos: null, completada: false }
+        : { id: null, peso: "", reps: 10, duracionSegundos: null, completada: false }],
     });
     cambio();
     pintarEjercicios();

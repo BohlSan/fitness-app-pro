@@ -4,30 +4,190 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Inicio</title>
-  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/styles.css?v=5">
   <link rel="stylesheet" href="/css/ejercicios.css?v=1">
   <link rel="stylesheet" href="/css/habitos.css?v=1">
 </head>
 <body>
-  <main class="pantalla">
-    <h1 id="saludo">Hola</h1>
-    <p class="subtitulo" id="rol"></p>
-    <p class="subtitulo" id="nota-rol"></p>
-    <section class="tarjeta-racha oculto" id="tarjeta-racha"></section>
-      <section class="agua" id="tarjeta-agua"></section>
+<main class="pantalla dashboard">
+
+  <!-- Encabezado principal -->
+  <header class="dashboard-hero">
+    <div class="dashboard-hero-contenido">
+
+      <p class="dashboard-eyebrow">
+        FITNESS / PERFORMANCE
+      </p>
+
+      <h1 id="saludo">Hola</h1>
+
+      <p class="subtitulo" id="rol"></p>
+
+      <p class="subtitulo" id="nota-rol"></p>
+
+      <p class="dashboard-objetivo" id="objetivo-dashboard">
+        Tu progreso empieza hoy
+      </p>
+
+    </div>
+  </header>
+
+  <!-- Indicadores principales -->
+  <section
+    class="dashboard-metricas"
+    id="dashboard-metricas"
+    aria-label="Resumen de rendimiento"
+  >
+
+    <article class="dashboard-metrica">
+      <span>Entrenamientos</span>
+      <strong id="metric-entrenamientos">—</strong>
+      <small>Sesiones completadas</small>
+    </article>
+
+    <article class="dashboard-metrica">
+      <span>Duración promedio</span>
+      <strong id="metric-tiempo">—</strong>
+      <small>Por entrenamiento</small>
+    </article>
+
+    <article class="dashboard-metrica">
+      <span>Peso actual</span>
+      <strong id="metric-peso">—</strong>
+      <small>Último valor del perfil</small>
+    </article>
+
+    <article class="dashboard-metrica">
+      <span>Objetivo semanal</span>
+      <strong id="metric-objetivo">—</strong>
+      <small>Días de entrenamiento por semana</small>
+    </article>
+
+  </section>
+
+  <!-- Racha -->
+  <section
+    class="tarjeta-racha oculto"
+    id="tarjeta-racha"
+  ></section>
+
+  <!-- Actividad y próxima rutina -->
+  <div class="dashboard-columnas dashboard-user-only">
+
+    <section class="dashboard-card">
+
+      <h2>Tu actividad semanal</h2>
+
+      <div
+        class="dashboard-semanas"
+        id="dashboard-semanas"
+        aria-label="Entrenamientos por semana"
+      ></div>
+
+      <p
+        class="rutina-meta"
+        id="dashboard-semanas-texto"
+      >
+        Tu constancia se va a mostrar acá.
+      </p>
+
+    </section>
+
+    <section class="dashboard-card">
+
+      <h2>Próximo entrenamiento</h2>
+
+      <div
+        class="dashboard-rutina-lista"
+        id="proxima-rutina"
+      >
+        <p class="rutina-meta">
+          Buscando tu próxima rutina…
+        </p>
+      </div>
+
+      <a
+        class="dashboard-rutina-cta"
+        href="/entrenar.html"
+      >
+        Ver todas las rutinas →
+      </a>
+
+    </section>
+
+  </div>
+
+  <!-- Hidratación y entrenador -->
+  <section class="dashboard-widgets dashboard-user-only">
+
+    <section class="agua" id="tarjeta-agua"></section>
+
     <section class="agua" id="tarjeta-entrenador"></section>
-      <ul id="resumen-perfil" class="resumen oculto"></ul>
-    <p class="mensaje-error" id="error"></p>
-    <p>Home provisorio. Las rutinas y los entrenamientos llegan en las próximas etapas.</p>
-    <a class="boton oculto" id="btn-clientes" href="/trainer.html">Mis clientes</a>
-    <a class="boton" href="/entrenar.html">Entrenar</a>
-    <a class="boton secundario" href="/progreso.html">Progreso</a>
-    <a class="boton secundario" href="/historial.html">Historial</a>
-    <a class="boton secundario" href="/ejercicios.html">Ejercicios</a>
-    <a class="boton secundario" href="/configuracion.html">Configuración</a>
-    <button class="boton secundario" id="salir">Cerrar sesión</button>
-  </main>
-  <script src="/js/api.js?v=3"></script>
+
+  </section>
+
+  <!-- Perfil personal -->
+  <section class="bloque dashboard-perfil dashboard-user-only">
+
+    <h2 class="subtitulo-bloque">
+      Tu perfil
+    </h2>
+
+    <ul
+      id="resumen-perfil"
+      class="resumen oculto"
+    ></ul>
+
+  </section>
+
+  <!-- Mensajes -->
+  <p
+    class="mensaje-error"
+    id="error"
+    role="alert"
+  ></p>
+
+  <!-- Acciones -->
+  <div class="dashboard-acciones">
+
+    <a
+      class="boton oculto"
+      id="btn-clientes"
+      href="/trainer.html"
+    >
+      Mis clientes
+    </a>
+
+    <a
+      class="boton"
+      href="/entrenar.html"
+    >
+      Comenzar a entrenar
+    </a>
+
+    <a
+      class="boton secundario"
+      id="btn-progreso-dashboard"
+      href="/progreso.html"
+    >
+      Ver progreso
+    </a>
+
+  </div>
+
+  <!-- Se conserva para compatibilidad con el JS existente -->
+  <button
+    class="boton secundario oculto"
+    id="salir"
+    type="button"
+  >
+    Cerrar sesión
+  </button>
+
+</main>
+
+
+  <script src="/js/api.js?v=4"></script>
     <script src="/js/habitos-ui.js?v=1"></script>
   <script src="/js/fechas-ui.js?v=1"></script>
   <script src="/js/entrenador-ui.js?v=1"></script>
@@ -57,41 +217,299 @@
       lista.classList.remove("oculto");
     }
 
-    async function cargarHome() {
-      const error = document.getElementById("error");
-      try {
-        const usuario = await apiFetch("/auth/me");
-        document.getElementById("saludo").textContent = "Hola, " + usuario.nombre;
-        document.getElementById("rol").textContent = etiquetas[usuario.rol] || "";
+function formatearDuracionDashboard(segundos) {
+  if (segundos === null || segundos === undefined) {
+    return "—";
+  }
 
-        if (usuario.rol !== "USUARIO") {
-          document.getElementById("nota-rol").textContent =
-            "Ingresaste como Personal Trainer.";
-          document.getElementById("btn-clientes").classList.remove("oculto");
-          return;
-        }
+  const minutos = Math.round(Number(segundos) / 60);
 
-        let perfil;
-        try {
-          perfil = await apiFetch("/perfil");
-        } catch (e) {
-          // Perfil sin completar: ir al formulario
-          if (e.status === 404) {
-            window.location.href = "/formulario.html";
-            return;
-          }
-          throw e;
-        }
-        mostrarResumen(perfil);
-          pintarRacha(document.getElementById("tarjeta-racha"));
-          crearWidgetHidratacion(document.getElementById("tarjeta-agua"));
-        crearTarjetaEntrenador(document.getElementById("tarjeta-entrenador"));
-      } catch (e) {
-        // Antes este error se perdía en silencio
-        error.textContent = e.message || "No pudimos cargar tu información.";
-        console.error(e);
+  if (minutos >= 60) {
+    const horas = Math.floor(minutos / 60);
+    const resto = minutos % 60;
+
+    return resto
+      ? `${horas} h ${resto} min`
+      : `${horas} h`;
+  }
+
+  return `${minutos} min`;
+}
+
+
+function pintarActividadSemanal(porSemana) {
+  const contenedor = document.getElementById("dashboard-semanas");
+  const texto = document.getElementById("dashboard-semanas-texto");
+
+  const semanas = (porSemana || []).slice(-7);
+
+  const maximo = Math.max(
+    1,
+    ...semanas.map((semana) => semana.cantidad)
+  );
+
+  contenedor.replaceChildren();
+
+  if (!semanas.length) {
+    texto.textContent = "Todavía no hay entrenamientos registrados.";
+    return;
+  }
+
+  semanas.forEach((semana) => {
+    const columna = document.createElement("div");
+    columna.className = "dashboard-semana";
+
+    const fondo = document.createElement("div");
+    fondo.className = "dashboard-barra-fondo";
+
+    const barra = document.createElement("div");
+    barra.className = "dashboard-barra";
+
+    barra.style.height = `${
+      semana.cantidad === 0
+        ? 3
+        : Math.max(8, (semana.cantidad / maximo) * 100)
+    }%`;
+
+    fondo.appendChild(barra);
+
+    const fecha = new Date(
+      `${semana.semana_inicio}T12:00:00`
+    );
+
+    const etiqueta = fecha
+      .toLocaleDateString("es-AR", {
+        day: "2-digit",
+        month: "short"
+      })
+      .replace(".", "");
+
+    const cantidad = document.createElement("strong");
+    cantidad.textContent = String(semana.cantidad);
+
+    const leyenda = document.createElement("small");
+    leyenda.textContent = etiqueta;
+
+    columna.append(fondo, cantidad, leyenda);
+
+    contenedor.appendChild(columna);
+  });
+
+  texto.textContent =
+    "Cantidad de entrenamientos finalizados por semana.";
+}
+
+
+async function cargarProximaRutina() {
+  const contenedor = document.getElementById("proxima-rutina");
+
+  try {
+    const rutinas = await apiFetch("/rutinas");
+
+    const dias = [
+      "DOMINGO",
+      "LUNES",
+      "MARTES",
+      "MIERCOLES",
+      "JUEVES",
+      "VIERNES",
+      "SABADO"
+    ];
+
+    const hoy = new Date().getDay();
+
+    let proximo = null;
+
+    for (let desplazamiento = 0; desplazamiento < 7; desplazamiento += 1) {
+
+      const diaBuscado = dias[
+        (hoy + desplazamiento) % 7
+      ];
+
+      const coincidencias = rutinas.flatMap((rutina) =>
+        rutina.dias
+          .filter((dia) => dia.dia_semana === diaBuscado)
+          .map((dia) => ({ rutina, dia }))
+      );
+
+      if (coincidencias.length) {
+        proximo = {
+          desplazamiento,
+          coincidencias
+        };
+
+        break;
       }
     }
+
+    contenedor.replaceChildren();
+
+    if (!proximo) {
+      const vacio = document.createElement("p");
+
+      vacio.className = "rutina-meta";
+      vacio.textContent = "Todavía no tenés rutinas programadas.";
+
+      contenedor.appendChild(vacio);
+
+      return;
+    }
+
+    const tituloDia = proximo.desplazamiento === 0
+      ? "Hoy"
+      : proximo.desplazamiento === 1
+        ? "Mañana"
+        : "En los próximos días";
+
+    proximo.coincidencias.forEach(({ rutina, dia }) => {
+
+      const tarjeta = document.createElement("div");
+      tarjeta.className = "dashboard-rutina-item";
+
+      const nombre = document.createElement("strong");
+      nombre.textContent = rutina.nombre;
+
+      const detalle = document.createElement("small");
+      detalle.textContent = `${tituloDia} · ${dia.nombre}`;
+
+      tarjeta.append(nombre, detalle);
+
+      contenedor.appendChild(tarjeta);
+    });
+
+  } catch (e) {
+
+    contenedor.replaceChildren();
+
+    const aviso = document.createElement("p");
+
+    aviso.className = "rutina-meta";
+    aviso.textContent = "No pudimos cargar las rutinas programadas.";
+
+    contenedor.appendChild(aviso);
+  }
+}
+
+
+async function cargarHome() {
+  const error = document.getElementById("error");
+
+  try {
+
+    const usuario = await apiFetch("/auth/me");
+
+    document.getElementById("saludo").textContent =
+      "Hola, " + usuario.nombre;
+
+    document.getElementById("rol").textContent =
+      etiquetas[usuario.rol] || "";
+
+    // ---------- Personal Trainer ----------
+
+    if (usuario.rol !== "USUARIO") {
+
+      document.getElementById("nota-rol").textContent =
+        "Ingresaste como Personal Trainer.";
+
+      document.getElementById("btn-clientes")
+        .classList.remove("oculto");
+
+      document.getElementById("btn-progreso-dashboard")
+        .classList.add("oculto");
+
+      document.getElementById("objetivo-dashboard").textContent =
+        "Gestión de clientes y seguimiento";
+
+      document.querySelectorAll(
+        ".dashboard-user-only, #dashboard-metricas, #tarjeta-racha"
+      ).forEach((nodo) => nodo.classList.add("oculto"));
+
+      return;
+    }
+
+    // ---------- Perfil ----------
+
+    let perfil;
+
+    try {
+
+      perfil = await apiFetch("/perfil");
+
+    } catch (e) {
+
+      if (e.status === 404) {
+        window.location.href = "/formulario.html";
+        return;
+      }
+
+      throw e;
+    }
+
+    document.getElementById("objetivo-dashboard").textContent =
+      `Objetivo: ${ETIQUETAS_OBJETIVO[perfil.objetivo] || "Mejorar tu rendimiento"}`;
+
+    document.getElementById("metric-peso").textContent =
+      `${Number(perfil.peso_actual_kg).toLocaleString("es-AR", {
+        maximumFractionDigits: 1
+      })} kg`;
+
+    document.getElementById("metric-objetivo").textContent =
+      `${perfil.dias_entrenamiento_semana} días`;
+
+    mostrarResumen(perfil);
+
+    // ---------- Estadísticas ----------
+
+    try {
+
+      const resumen = await apiFetch("/estadisticas/resumen");
+
+      document.getElementById("metric-entrenamientos").textContent =
+        String(resumen.cantidad_entrenamientos);
+
+      document.getElementById("metric-tiempo").textContent =
+        formatearDuracionDashboard(
+          resumen.duracion_promedio_segundos
+        );
+
+      pintarActividadSemanal(resumen.por_semana);
+
+    } catch (e) {
+
+      document.getElementById("metric-entrenamientos").textContent = "0";
+      document.getElementById("metric-tiempo").textContent = "—";
+
+      pintarActividadSemanal([]);
+    }
+
+    // ---------- Widgets existentes ----------
+
+    await Promise.allSettled([
+
+      pintarRacha(
+        document.getElementById("tarjeta-racha")
+      ),
+
+      crearWidgetHidratacion(
+        document.getElementById("tarjeta-agua")
+      ),
+
+      crearTarjetaEntrenador(
+        document.getElementById("tarjeta-entrenador")
+      ),
+
+      cargarProximaRutina(),
+
+    ]);
+
+  } catch (e) {
+
+    error.textContent =
+      e.message || "No pudimos cargar tu información.";
+
+    console.error(e);
+  }
+}
 
     cargarHome();
 

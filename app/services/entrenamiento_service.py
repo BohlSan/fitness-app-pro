@@ -2,12 +2,14 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+from app.models.ejercicio import Ejercicio, TipoMedicion
 from app.models.entrenamiento import (
     EjercicioEntrenamiento,
     Entrenamiento,
     EstadoEntrenamiento,
     Serie,
 )
+from app.models.perfil import PerfilUsuario
 from app.models.usuario import Usuario
 from app.schemas.entrenamiento import (
     EjercicioEntrenamientoIn,
@@ -114,17 +116,33 @@ def iniciar_entrenamiento(
 
         entrenamiento.rutina_id = rutina.id
         entrenamiento.titulo = f"{rutina.nombre} · {dia.nombre}"
+        perfil = db.get(PerfilUsuario, usuario.id)
+        peso_corporal = perfil.peso_actual_kg if perfil is not None else None
         for posicion, item in enumerate(dia.ejercicios):
-            # Series por defecto: los valores de la rutina, editables al entrenar
-            series = [
-                Serie(
-                    numero=numero,
-                    peso_kg=item.peso_sugerido_kg,
-                    repeticiones=item.repeticiones,
-                    completada=False,
-                )
-                for numero in range(1, item.series + 1)
-            ]
+            if item.ejercicio.tipo_medicion == TipoMedicion.TIEMPO:
+                # Ejercicio por tiempo: un único registro de duración, sin repeticiones.
+                series = [
+                    Serie(
+                        numero=1,
+                        peso_kg=None,
+                        repeticiones=None,
+                        duracion_segundos=item.duracion_sugerida_segundos,
+                        completada=False,
+                    )
+                ]
+            else:
+                # El peso corporal se copia como carga en el momento de iniciar.
+                peso = peso_corporal if item.ejercicio.usa_peso_corporal else item.peso_sugerido_kg
+                series = [
+                    Serie(
+                        numero=numero,
+                        peso_kg=peso,
+                        repeticiones=item.repeticiones,
+                        duracion_segundos=None,
+                        completada=False,
+                    )
+                    for numero in range(1, item.series + 1)
+                ]
             entrenamiento.ejercicios.append(
                 EjercicioEntrenamiento(
                     ejercicio_id=item.ejercicio_id, orden=posicion, series=series
@@ -142,7 +160,21 @@ def iniciar_entrenamiento(
 
 
 # ---------- Registrar ejercicios y series ----------
-def _sincronizar_series(ejercicio: EjercicioEntrenamiento, series_in: list[SerieIn]) -> None:
+def _sincronizar_series(
+    ejercicio: EjercicioEntrenamiento,
+    series_in: list[SerieIn],
+    ejercicio_catalogo: Ejercicio,
+    peso_corporal: float | None,
+    cambiar_ejercicio: bool = False,
+) -> None:
+    es_tiempo = ejercicio_catalogo.tipo_medicion == TipoMedicion.TIEMPO
+    if es_tiempo and len(series_in) != 1:
+        raise DatosEntrenamientoInvalidos("El ejercicio por tiempo debe tener un único registro de duración")
+    if es_tiempo and any(s.duracion_segundos is None for s in series_in):
+        raise DatosEntrenamientoInvalidos("Indicá la duración del ejercicio")
+    if not es_tiempo and any(s.repeticiones is None for s in series_in):
+        raise DatosEntrenamientoInvalidos("Indicá las repeticiones de cada serie")
+
     actuales = {serie.id: serie for serie in ejercicio.series}
     conservadas = {s.id for s in series_in if s.id is not None}
     if not conservadas.issubset(actuales):
@@ -153,24 +185,47 @@ def _sincronizar_series(ejercicio: EjercicioEntrenamiento, series_in: list[Serie
             ejercicio.series.remove(serie)
 
     for numero, serie_in in enumerate(series_in, start=1):
-        if serie_in.id is None:
+        es_nueva = serie_in.id is None
+        if es_nueva:
             serie = Serie()
             ejercicio.series.append(serie)
         else:
             serie = actuales[serie_in.id]
         serie.numero = numero
-        serie.peso_kg = serie_in.peso_kg
-        serie.repeticiones = serie_in.repeticiones
         serie.completada = serie_in.completada
+        if es_tiempo:
+            serie.peso_kg = None
+            serie.repeticiones = None
+            serie.duracion_segundos = serie_in.duracion_segundos
+        else:
+            serie.repeticiones = serie_in.repeticiones
+            serie.duracion_segundos = None
+            if ejercicio_catalogo.usa_peso_corporal:
+                # El peso queda congelado en la serie; no cambia si luego se edita el perfil.
+                if es_nueva or cambiar_ejercicio or serie.peso_kg is None:
+                    serie.peso_kg = peso_corporal
+            else:
+                serie.peso_kg = serie_in.peso_kg
 
 
 def _sincronizar_ejercicios(
-    entrenamiento: Entrenamiento, ejercicios_in: list[EjercicioEntrenamientoIn]
+    db: Session,
+    entrenamiento: Entrenamiento,
+    ejercicios_in: list[EjercicioEntrenamientoIn],
+    peso_corporal: float | None,
 ) -> None:
     actuales = {e.id: e for e in entrenamiento.ejercicios}
     conservados = {e.id for e in ejercicios_in if e.id is not None}
     if not conservados.issubset(actuales):
         raise DatosEntrenamientoInvalidos("Uno de los ejercicios no pertenece a este entrenamiento")
+
+    ids = {item.ejercicio_id for item in ejercicios_in}
+    catalogo = {
+        ejercicio.id: ejercicio
+        for ejercicio in db.scalars(select(Ejercicio).where(Ejercicio.id.in_(ids)))
+    } if ids else {}
+    if len(catalogo) != len(ids):
+        raise DatosEntrenamientoInvalidos("Alguno de los ejercicios elegidos no existe")
 
     for ejercicio in list(entrenamiento.ejercicios):
         if ejercicio.id not in conservados:
@@ -180,12 +235,21 @@ def _sincronizar_ejercicios(
         if ejercicio_in.id is None:
             ejercicio = EjercicioEntrenamiento()
             entrenamiento.ejercicios.append(ejercicio)
+            cambiar_ejercicio = True
         else:
             ejercicio = actuales[ejercicio_in.id]
+            cambiar_ejercicio = ejercicio.ejercicio_id != ejercicio_in.ejercicio_id
+        ejercicio_catalogo = catalogo[ejercicio_in.ejercicio_id]
         ejercicio.ejercicio_id = ejercicio_in.ejercicio_id
         ejercicio.orden = posicion
         ejercicio.notas = ejercicio_in.notas
-        _sincronizar_series(ejercicio, ejercicio_in.series)
+        _sincronizar_series(
+            ejercicio,
+            ejercicio_in.series,
+            ejercicio_catalogo,
+            peso_corporal,
+            cambiar_ejercicio=cambiar_ejercicio,
+        )
 
 
 def actualizar_entrenamiento(
@@ -200,7 +264,9 @@ def actualizar_entrenamiento(
         nuevos = pedidos - ya_usados
         if nuevos - ejercicio_service.ids_ejercicios_visibles(db, usuario, nuevos):
             raise DatosEntrenamientoInvalidos("Alguno de los ejercicios elegidos no existe")
-        _sincronizar_ejercicios(entrenamiento, datos.ejercicios)
+        perfil = db.get(PerfilUsuario, usuario.id)
+        peso_corporal = perfil.peso_actual_kg if perfil is not None else None
+        _sincronizar_ejercicios(db, entrenamiento, datos.ejercicios, peso_corporal)
     except DatosEntrenamientoInvalidos:
         db.rollback()  # RNF-14: no dejar cambios a medias
         raise

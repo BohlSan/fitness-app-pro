@@ -13,5 +13,12 @@ def test_el_volumen_suma_peso_por_repeticiones_de_las_series_completadas():
     assert volumen_series(series) == 1100
 
 
+
 def test_las_series_sin_peso_no_suman_volumen():
     assert volumen_series([serie(None, 15)]) == 0
+
+
+def test_el_cardio_no_suma_volumen_aunque_tenga_duracion():
+    registros = [serie(None, None)]
+    registros[0].duracion_segundos = 900
+    assert volumen_series(registros) == 0

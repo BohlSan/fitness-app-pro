@@ -90,3 +90,17 @@ def test_los_entrenamientos_por_semana_incluyen_las_semanas_en_cero():
         (date(2026, 10, 12), 0),
         (date(2026, 10, 19), 1),
     ]
+
+
+def test_duracion_de_cardio_se_acumula_y_genera_record():
+    cardio_a = FilaSerie(10, date(2026, 10, 1), None, None, 600, "TIEMPO")
+    cardio_b = FilaSerie(11, date(2026, 10, 8), None, None, 900, "TIEMPO")
+
+    sesiones = volumen_por_sesion([cardio_a, cardio_b])
+    marcas = mejores_marcas([cardio_a, cardio_b])
+    prs = detectar_prs([cardio_a], [cardio_b])
+
+    assert [sesion["duracion_total_segundos"] for sesion in sesiones] == [600, 900]
+    assert all(sesion["volumen_kg"] == 0 for sesion in sesiones)
+    assert marcas["mayor_duracion"]["duracion_segundos"] == 900
+    assert prs == [{"tipo": "DURACION", "valor": 900, "anterior": 600}]

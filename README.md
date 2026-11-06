@@ -8,8 +8,8 @@ con un rol de **Personal Trainer**, administrar clientes. Proyecto grupal de Pro
 **Usuario particular**
 - Registrarse e iniciar sesión, completar su perfil (datos físicos, objetivo, hidratación).
 - Crear rutinas por día de la semana con ejercicios del catálogo (o propios).
-- Entrenar desde una rutina o en estilo libre: series, pesos, repeticiones, cronómetro, agua, dificultad, cansancio y ánimo.
-- Ver el historial (con calendario mensual), el progreso (peso, ejercicios, mejores marcas, estadísticas), su racha y su hidratación.
+- Entrenar desde una rutina o en estilo libre: series, pesos, repeticiones y duración de cardio/isométricos, carga automática del peso corporal, cronómetro, agua, dificultad, cansancio y ánimo.
+- Ver el historial con calendario mensual y días previstos por las rutinas, el progreso (peso, ejercicios, duración de cardio, mejores marcas y estadísticas), su racha y su hidratación.
 - Vincularse con un personal trainer mediante un código.
 
 **Personal trainer**
@@ -47,11 +47,20 @@ con un rol de **Personal Trainer**, administrar clientes. Proyecto grupal de Pro
    | `TEST_DATABASE_URL` | Base **distinta** para los tests (se borran sus tablas en cada corrida) |
    | `SECRET_KEY` | Clave para firmar los tokens. Generar con `python -c "import secrets; print(secrets.token_urlsafe(48))"` |
 
-4. Crear las tablas y cargar el catálogo de ejercicios:
+4. Crear las tablas y cargar el catálogo de ejercicios.
+
+   Para una base nueva:
    ```
    poetry run python -m scripts.create_tables
    poetry run python -m scripts.seed_ejercicios
    ```
+   Para una base existente de una etapa anterior, primero aplicar la migración y luego actualizar el catálogo:
+   ```
+   poetry run python -m scripts.migrar_pendientes
+   poetry run python -m scripts.create_tables
+   poetry run python -m scripts.seed_ejercicios
+   ```
+   La migración se ejecuta una vez por cada base existente (desarrollo, tests si se conserva su esquema y producción).
 5. Levantar la aplicación:
    ```
    poetry run uvicorn app.main:app --reload
@@ -78,6 +87,7 @@ y nunca la base de desarrollo.
 | `python -m scripts.seed_ejercicios` | Carga el catálogo base de ejercicios (se puede repetir) |
 | `python -m scripts.reset_db` | **Borra y recrea** todas las tablas (pide confirmación) |
 | `python -m scripts.migrar_etapa_8` | Agrega dos columnas a una base creada antes de la hidratación configurable |
+| `python -m scripts.migrar_pendientes` | Agrega tipo de medición, duración y marca de peso corporal; permite `NULL` en repeticiones para cardio |
 
 ## Estructura
 

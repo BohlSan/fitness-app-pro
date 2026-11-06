@@ -1,9 +1,14 @@
 import enum
 
-from sqlalchemy import Enum, ForeignKey, String
+from sqlalchemy import Boolean, Enum, ForeignKey, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.registry import mapper_registry
+
+
+class TipoMedicion(str, enum.Enum):
+    REPETICIONES = "REPETICIONES"
+    TIEMPO = "TIEMPO"
 
 
 class GrupoMuscular(str, enum.Enum):
@@ -49,6 +54,14 @@ class Ejercicio:
     )
     grupo_secundario: Mapped[GrupoMuscular | None] = mapped_column(
         Enum(GrupoMuscular, native_enum=False, length=30), default=None
+    )
+    tipo_medicion: Mapped[TipoMedicion] = mapped_column(
+        Enum(TipoMedicion, native_enum=False, length=20),
+        default=TipoMedicion.REPETICIONES,
+        server_default=TipoMedicion.REPETICIONES.value,
+    )
+    usa_peso_corporal: Mapped[bool] = mapped_column(
+        Boolean, default=False, server_default=text("false")
     )
     # NULL = ejercicio del catálogo base (solo lectura). Con valor = ejercicio propio
     creador_id: Mapped[int | None] = mapped_column(

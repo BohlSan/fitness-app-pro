@@ -17,6 +17,8 @@ class EjercicioFactory:
             descripcion=datos.descripcion,
             grupo_principal=datos.grupo_principal,
             grupo_secundario=datos.grupo_secundario,
+            tipo_medicion=datos.tipo_medicion,
+            usa_peso_corporal=datos.usa_peso_corporal,
             creador_id=creador_id,
         )
 

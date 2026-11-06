@@ -4,6 +4,7 @@ from datetime import date
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session, joinedload, selectinload
 
+from app.models.rutina import DiaRutina, DiaSemana, Rutina
 from app.models.entrenamiento import (
     EjercicioEntrenamiento,
     Entrenamiento,
@@ -79,3 +80,32 @@ def calendario_mensual(db: Session, usuario_id: int, anio: int, mes: int) -> lis
         {"fecha": fecha, "cantidad": cantidad, "dificultad_max": dificultad}
         for fecha, cantidad, dificultad in filas
     ]
+
+
+def calendario_planificado(db: Session, usuario_id: int, anio: int, mes: int) -> list[dict]:
+    """Días del mes con rutinas previstas, incluyendo todas las rutinas coincidentes."""
+    primero = date(anio, mes, 1)
+    ultimo = date(anio, mes, calendar.monthrange(anio, mes)[1])
+
+    filas = db.execute(
+        select(Rutina.nombre, DiaRutina.nombre, DiaRutina.dia_semana)
+        .join(DiaRutina, DiaRutina.rutina_id == Rutina.id)
+        .where(Rutina.propietario_id == usuario_id)
+        .order_by(Rutina.nombre, DiaRutina.nombre)
+    ).all()
+
+    por_dia = {dia: [] for dia in DiaSemana}
+    for rutina_nombre, dia_nombre, dia_semana in filas:
+        por_dia[dia_semana].append(
+            {"rutina_nombre": rutina_nombre, "dia_nombre": dia_nombre}
+        )
+
+    resultado = []
+    fecha = primero
+    dias_por_numero = list(DiaSemana)
+    while fecha <= ultimo:
+        rutinas = por_dia[dias_por_numero[fecha.weekday()]]
+        if rutinas:
+            resultado.append({"fecha": fecha, "rutinas": rutinas})
+        fecha = date.fromordinal(fecha.toordinal() + 1)
+    return resultado

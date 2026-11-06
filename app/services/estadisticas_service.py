@@ -36,8 +36,11 @@ def _filas_series(db: Session, usuario_id: int, ejercicio_id: int | None = None)
             EjercicioEntrenamiento.ejercicio_id,
             Ejercicio.nombre,
             Ejercicio.grupo_principal,
+            Ejercicio.tipo_medicion,
+            Ejercicio.usa_peso_corporal,
             Serie.peso_kg,
             Serie.repeticiones,
+            Serie.duracion_segundos,
         )
         .select_from(Entrenamiento)
         .join(EjercicioEntrenamiento, EjercicioEntrenamiento.entrenamiento_id == Entrenamiento.id)
@@ -135,12 +138,19 @@ def ejercicios_entrenados(db: Session, usuario_id: int) -> list[dict]:
                 "ejercicio_id": ejercicio_id,
                 "nombre": filas[0].nombre,
                 "grupo_principal": filas[0].grupo_principal,
+                "tipo_medicion": filas[0].tipo_medicion,
+                "usa_peso_corporal": filas[0].usa_peso_corporal,
                 "sesiones": len({f.entrenamiento_id for f in filas}),
                 "ultima_fecha": max(f.fecha for f in filas),
                 "mayor_peso_kg": marcas["mayor_peso"]["peso_kg"] if marcas["mayor_peso"] else None,
                 "mejor_volumen_sesion_kg": (
                     marcas["mejor_volumen_sesion"]["volumen_kg"]
                     if marcas["mejor_volumen_sesion"]
+                    else None
+                ),
+                "mayor_duracion_segundos": (
+                    marcas["mayor_duracion"]["duracion_segundos"]
+                    if marcas["mayor_duracion"]
                     else None
                 ),
             }
@@ -170,7 +180,10 @@ def evolucion_ejercicio(
         "ejercicio_id": ejercicio_id,
         "nombre": filas[0].nombre,
         "grupo_principal": filas[0].grupo_principal,
+        "tipo_medicion": filas[0].tipo_medicion,
+        "usa_peso_corporal": filas[0].usa_peso_corporal,
         "volumen_total_kg": round(sum(s["volumen_kg"] for s in sesiones), 2),
+        "duracion_total_segundos": sum(s["duracion_total_segundos"] for s in sesiones),
         "sesiones": sesiones,
         "marcas": calculos.mejores_marcas(filas),
     }

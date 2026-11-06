@@ -73,8 +73,10 @@ class RutinaEjercicio:
         ForeignKey("ejercicios.id", ondelete="RESTRICT"), index=True
     )
     orden: Mapped[int] = mapped_column(default=0)
-    series: Mapped[int] = mapped_column()
-    repeticiones: Mapped[int] = mapped_column()
+    # En ejercicios por tiempo, series y repeticiones quedan en NULL.
+    series: Mapped[int | None] = mapped_column(nullable=True)
+    repeticiones: Mapped[int | None] = mapped_column(nullable=True)
+    duracion_sugerida_segundos: Mapped[int | None] = mapped_column(default=None)
     peso_sugerido_kg: Mapped[float | None] = mapped_column(Float, default=None)
     descanso_segundos: Mapped[int | None] = mapped_column(default=None)
 

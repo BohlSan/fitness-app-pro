@@ -20,7 +20,11 @@
 }
 .dia.vacio { background: transparent; cursor: default; }
 .dia .num { font-size: 0.8rem; color: var(--texto-suave); line-height: 1; }
-.dia .marca { font-size: 1.05rem; line-height: 1.15; }
+.dia .marca { font-size: 0.95rem; line-height: 1.05; }
+.marcas-dia { display: flex; align-items: center; gap: 2px; }
+.dia .etiqueta-hoy { font-size: 0.52rem; font-weight: 800; letter-spacing: 0.02em; color: var(--acento); line-height: 1; }
+.dia .nivel-numero { font-size: 0.58rem; font-weight: 700; color: var(--acento); line-height: 1; }
+.dia .cantidad-planificada { font-size: 0.55rem; color: var(--texto-suave); line-height: 1; }
 .dia small { font-size: 0.62rem; font-weight: 700; color: var(--acento); line-height: 1; }
 
 .dia.con-entreno { background: var(--acento-claro); border-color: #bfe0cd; }
@@ -29,11 +33,30 @@
 .dia.nivel-3 { background: #c8e8d6; }
 .dia.nivel-4 { background: #b8e1ca; }
 .dia.nivel-5 { background: #a6d9bd; }
-.dia.hoy { border-color: var(--acento); }
+.dia.planificado { outline: 1px dashed var(--acento); outline-offset: -4px; }
+.dia.hoy {
+  border: 3px solid var(--acento);
+  background: #e2f3e9;
+  box-shadow: 0 0 0 2px rgba(31, 122, 77, 0.12);
+  font-weight: 800;
+}
+.dia.hoy .num { color: var(--acento); font-weight: 800; }
+.dia.seleccionado .etiqueta-hoy { color: #fff; }
 .dia.seleccionado { background: var(--acento); border-color: var(--acento); }
 .dia.seleccionado .num, .dia.seleccionado small { color: #fff; }
 
 .leyenda { margin: 0; font-size: 0.78rem; color: var(--texto-suave); }
+.detalle-planificado {
+  margin-top: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  background: var(--tarjeta);
+  font-size: 0.88rem;
+}
+.detalle-planificado p { margin: 6px 0 0; color: var(--texto-suave); }
+.detalle-planificado ul { margin: 6px 0 0; padding-left: 20px; }
+.detalle-planificado li + li { margin-top: 4px; }
 
 /* ---------- Filtros ---------- */
 .periodo { display: grid; grid-template-columns: 1fr 1fr auto; gap: 8px; align-items: end; }

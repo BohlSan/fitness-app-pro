@@ -7,9 +7,15 @@ requerirSesion();
 const CLIENTE_ID = new URLSearchParams(window.location.search).get("cliente");
 const BASE_API = CLIENTE_ID ? `/trainer/clientes/${CLIENTE_ID}` : "";
 
-const COLOR = "#1f7a4d";
-const COLOR_SUAVE = "rgba(31, 122, 77, 0.15)";
-const COLOR_TENDENCIA = "#d9822b";
+const COLOR = "#a3ff12";
+const COLOR_SUAVE = "rgba(163, 255, 18, 0.14)";
+const COLOR_TENDENCIA = "#f59e0b";
+
+if (typeof Chart !== "undefined") {
+  Chart.defaults.color = "#a1a1aa";
+  Chart.defaults.borderColor = "rgba(255, 255, 255, 0.09)";
+  Chart.defaults.font.family = "Inter, sans-serif";
+}
 
 const sesionActual = obtenerUsuario();
 const graficos = {};
@@ -187,7 +193,12 @@ function pintarMarcas() {
           el("span", {
             class: "valores",
             text:
-              (ejercicio.mayor_peso_kg ? `🏆 ${formatoNumero(ejercicio.mayor_peso_kg)} kg` : "🏆 Peso corporal") +
+              (ejercicio.mayor_peso_kg
+                ? `${ejercicio.usa_peso_corporal ? "🏆 Carga corporal" : "🏆 Peso"} ${formatoNumero(ejercicio.mayor_peso_kg)} kg`
+                : "") +
+              (ejercicio.mayor_duracion_segundos
+                ? ` · ⏱ ${formatoDuracionCorta(ejercicio.mayor_duracion_segundos)}`
+                : "") +
               (ejercicio.mejor_volumen_sesion_kg
                 ? ` · 📦 ${formatoNumero(ejercicio.mejor_volumen_sesion_kg, 0)} kg en una sesión`
                 : ""),
@@ -204,13 +215,57 @@ async function cargarDetalleEjercicio() {
   const detalle = await apiFetch(`${BASE_API}/estadisticas/ejercicios/${id}?${new URLSearchParams(rangoPeriodo())}`);
 
   const marcas = detalle.marcas;
+  const sesiones = detalle.sesiones;
+  document.getElementById("aviso-ejercicio").textContent = sesiones.length
+    ? ""
+    : "No entrenaste este ejercicio en el período elegido.";
+  const esTiempo = detalle.tipo_medicion === "TIEMPO";
+  const metricas = document.getElementById("metricas");
+  const tituloReps = document.getElementById("titulo-reps-por-peso");
+  const listaReps = document.getElementById("reps-por-peso");
+  metricas.classList.toggle("oculto", esTiempo);
+  tituloReps.classList.toggle("oculto", esTiempo);
+  listaReps.classList.toggle("oculto", esTiempo);
+
+  if (esTiempo) {
+    document.getElementById("datos-ejercicio").replaceChildren(
+      dato(formatoDuracionCorta(detalle.duracion_total_segundos), "Duración acumulada"),
+      dato(
+        marcas.mayor_duracion
+          ? formatoDuracionCorta(marcas.mayor_duracion.duracion_segundos)
+          : "—",
+        "Mayor duración registrada"
+      ),
+      dato(String(sesiones.length), "Sesiones en el período")
+    );
+    dibujar("ejercicio", "grafico-ejercicio", {
+      type: "bar",
+      data: {
+        labels: sesiones.map((sesion) => fechaCorta(sesion.fecha)),
+        datasets: [
+          {
+            label: "Duración",
+            data: sesiones.map((sesion) => sesion.duracion_total_segundos),
+            borderColor: COLOR,
+            backgroundColor: COLOR,
+          },
+        ],
+      },
+      options: {
+        ...OPCIONES_BASE,
+        scales: { y: { beginAtZero: true, ticks: { callback: (valor) => formatoDuracionCorta(valor) } } },
+      },
+    });
+    return;
+  }
+
   document.getElementById("datos-ejercicio").replaceChildren(
     dato(`${formatoNumero(detalle.volumen_total_kg, 0)} kg`, "Volumen en el período"),
     dato(
       marcas.mayor_peso
         ? `${formatoNumero(marcas.mayor_peso.peso_kg)} kg × ${marcas.mayor_peso.repeticiones}`
         : "—",
-      "Mayor peso (histórico)"
+      detalle.usa_peso_corporal ? "Mayor carga corporal (histórico)" : "Mayor peso (histórico)"
     ),
     dato(
       marcas.mejor_volumen_sesion ? `${formatoNumero(marcas.mejor_volumen_sesion.volumen_kg, 0)} kg` : "—",
@@ -218,10 +273,6 @@ async function cargarDetalleEjercicio() {
     )
   );
 
-  const sesiones = detalle.sesiones;
-  document.getElementById("aviso-ejercicio").textContent = sesiones.length
-    ? ""
-    : "No entrenaste este ejercicio en el período elegido.";
   dibujar("ejercicio", "grafico-ejercicio", {
     type: metrica === "peso" ? "line" : "bar",
     data: {
@@ -239,7 +290,7 @@ async function cargarDetalleEjercicio() {
     options: { ...OPCIONES_BASE, scales: { y: { beginAtZero: metrica === "volumen" } } },
   });
 
-  document.getElementById("reps-por-peso").replaceChildren(
+  listaReps.replaceChildren(
     ...marcas.repeticiones_por_peso.slice(0, 8).map((marca) =>
       el(
         "li",
@@ -250,7 +301,6 @@ async function cargarDetalleEjercicio() {
     )
   );
 }
-
 async function cargarEjercicios() {
   ejerciciosEntrenados = await apiFetch(`${BASE_API}/estadisticas/ejercicios`);
   pintarMarcas();

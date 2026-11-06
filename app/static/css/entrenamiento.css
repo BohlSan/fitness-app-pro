@@ -107,3 +107,9 @@
 .resumen-lista .series-detalle li { display: block; border: 0; padding: 0; background: none; }
 .records { background: #fff8e1; border: 1px solid #f0d28a; border-radius: 14px; padding: 12px 16px; }
 .records p { margin: 6px 0 0; font-size: 0.92rem; }
+
+/* ---------- Cardio medido por tiempo ---------- */
+.fila-tiempo { display: grid; grid-template-columns: minmax(150px, 1fr) 44px; gap: 10px; align-items: end; max-width: 320px; }
+.fila-tiempo input { width: 100%; padding: 8px; }
+.ejercicio-tiempo .check-serie { width: 44px; }
+.fila-serie input:disabled { color: var(--texto-suave); background: #f0f2f4; opacity: 1; }

@@ -14,6 +14,7 @@ const estado = document.getElementById("estado");
 const filtroActivo = document.getElementById("filtro-activo");
 const botonMas = document.getElementById("mas");
 const errorPeriodo = document.getElementById("error-periodo");
+const detallePlanificado = document.getElementById("detalle-planificado");
 const campoDesde = document.getElementById("desde");
 const campoHasta = document.getElementById("hasta");
 
@@ -21,6 +22,8 @@ const inicial = new Date();
 let mesVisible = { anio: inicial.getFullYear(), mes: inicial.getMonth() + 1 };
 let filtro = { desde: null, hasta: null, etiqueta: "" };
 let diasConEntreno = new Map();
+let diasPlanificados = new Map();
+let fechaSeleccionada = aISO(inicial);
 let offset = 0;
 let numeroPeticion = 0;
 
@@ -68,23 +71,57 @@ function filtroSemana(fecha) {
 
 function aplicarFiltro(nuevo) {
   filtro = nuevo;
+  if (nuevo.desde && nuevo.hasta && nuevo.desde === nuevo.hasta) {
+    fechaSeleccionada = nuevo.desde;
+  }
   filtroActivo.textContent = filtro.etiqueta;
   pintarCalendario();
+  pintarDetallePlanificado(fechaSeleccionada);
   cargarLista(true);
 }
 
 // ---------- Calendario ----------
 async function cargarCalendario() {
-  const datos = await apiFetch(
-    `/entrenamientos/calendario?anio=${mesVisible.anio}&mes=${mesVisible.mes}`
-  );
-  diasConEntreno = new Map(datos.map((dia) => [dia.fecha, dia]));
+  const query = `anio=${mesVisible.anio}&mes=${mesVisible.mes}`;
+  const [entrenamientos, planificados] = await Promise.all([
+    apiFetch(`/entrenamientos/calendario?${query}`),
+    apiFetch(`/entrenamientos/calendario/planificados?${query}`),
+  ]);
+  diasConEntreno = new Map(entrenamientos.map((dia) => [dia.fecha, dia]));
+  diasPlanificados = new Map(planificados.map((dia) => [dia.fecha, dia]));
   pintarCalendario();
+  pintarDetallePlanificado(fechaSeleccionada);
 }
 
 async function mostrarMes(anio, mes) {
   mesVisible = { anio, mes };
+  const mesDeSeleccion = fechaSeleccionada.slice(0, 7);
+  const mesNuevo = `${anio}-${pad2(mes)}`;
+  if (mesDeSeleccion !== mesNuevo) fechaSeleccionada = `${mesNuevo}-01`;
   await cargarCalendario();
+}
+
+function pintarDetallePlanificado(iso) {
+  if (!detallePlanificado) return;
+  const programacion = diasPlanificados.get(iso);
+  const encabezado = el("strong", { text: `Rutinas previstas · ${capitalizar(formatoFechaLarga(iso))}` });
+  if (!programacion || !programacion.rutinas.length) {
+    detallePlanificado.replaceChildren(
+      encabezado,
+      el("p", { text: "No hay rutinas planificadas para esta fecha." })
+    );
+    return;
+  }
+  detallePlanificado.replaceChildren(
+    encabezado,
+    el(
+      "ul",
+      {},
+      ...programacion.rutinas.map((rutina) =>
+        el("li", { text: `${rutina.rutina_nombre} · ${rutina.dia_nombre}` })
+      )
+    )
+  );
 }
 
 function mesDesplazado(delta) {
@@ -106,26 +143,46 @@ function pintarCalendario() {
   for (let dia = 1; dia <= cantidadDias; dia++) {
     const iso = `${mesVisible.anio}-${pad2(mesVisible.mes)}-${pad2(dia)}`;
     const info = diasConEntreno.get(iso);
+    const planificado = diasPlanificados.get(iso);
 
     const clases = ["dia"];
     if (info) {
       clases.push("con-entreno");
       if (info.dificultad_max) clases.push(`nivel-${info.dificultad_max}`);
     }
+    if (planificado) clases.push("planificado");
     if (iso === hoyISO) clases.push("hoy");
-    if (filtro.desde === iso && filtro.hasta === iso) clases.push("seleccionado");
+    if (fechaSeleccionada === iso) clases.push("seleccionado");
 
-    const etiquetaAria = info
-      ? `${formatoFechaLarga(iso)}: ${info.cantidad} entrenamiento${info.cantidad === 1 ? "" : "s"}`
-      : formatoFechaLarga(iso);
+    const datosAria = [];
+    if (info) datosAria.push(`${info.cantidad} entrenamiento${info.cantidad === 1 ? "" : "s"}`);
+    if (planificado) datosAria.push(`${planificado.rutinas.length} rutina${planificado.rutinas.length === 1 ? "" : "s"} prevista${planificado.rutinas.length === 1 ? "" : "s"}`);
+    const etiquetaAria = [formatoFechaLarga(iso), ...datosAria].join(": ");
+
+    const marcas = [];
+    if (info) marcas.push(el("span", { class: "marca", text: info.dificultad_max ? "💪" : "✅" }));
+    if (planificado) marcas.push(el("span", { class: "marca planificado-marca", text: "📅" }));
 
     celdas.push(
       el(
         "button",
-        { type: "button", class: clases.join(" "), "aria-label": etiquetaAria, onclick: () => aplicarFiltro(filtroDia(iso)) },
+        {
+          type: "button",
+          class: clases.join(" "),
+          "aria-label": etiquetaAria,
+          "aria-current": iso === hoyISO ? "date" : null,
+          onclick: () => {
+            fechaSeleccionada = iso;
+            aplicarFiltro(filtroDia(iso));
+          },
+        },
         el("span", { class: "num", text: String(dia) }),
-        info ? el("span", { class: "marca", text: info.dificultad_max ? "💪" : "✅" }) : "",
-        info && info.dificultad_max ? el("small", { text: String(info.dificultad_max) }) : ""
+        ...(iso === hoyISO ? [el("small", { class: "etiqueta-hoy", text: "HOY" })] : []),
+        ...(marcas.length ? [el("span", { class: "marcas-dia" }, ...marcas)] : []),
+        info && info.dificultad_max ? el("small", { class: "nivel-numero", text: String(info.dificultad_max) }) : "",
+        planificado && planificado.rutinas.length > 1
+          ? el("small", { class: "cantidad-planificada", text: `${planificado.rutinas.length}` })
+          : ""
       )
     );
   }

@@ -54,8 +54,11 @@ function desdeRespuesta(rutina) {
         ejercicio_id: item.ejercicio.id,
         nombre_ejercicio: item.ejercicio.nombre,
         grupo: item.ejercicio.grupo_principal,
+        tipo_medicion: item.ejercicio.tipo_medicion,
+        usa_peso_corporal: item.ejercicio.usa_peso_corporal,
         series: item.series,
         repeticiones: item.repeticiones,
+        duracion_sugerida_segundos: item.duracion_sugerida_segundos ?? null,
         peso: item.peso_sugerido_kg ?? "",
         descanso: item.descanso_segundos ?? "",
       })),
@@ -122,16 +125,26 @@ function tarjetaEjercicio(dia, ejercicio, indice) {
       render();
     }, false, "peligro")
   );
-  const campos = el(
-    "div",
-    { class: "ej-campos" },
-    campoNumero("Series", ejercicio.series, 1, 20, 1, (v) => { ejercicio.series = v; }),
-    campoNumero("Repeticiones", ejercicio.repeticiones, 1, 100, 1, (v) => { ejercicio.repeticiones = v; }),
-    campoNumero("Peso sugerido (kg)", ejercicio.peso, 0, 1000, 0.5, (v) => { ejercicio.peso = v; }),
-    campoNumero("Descanso (seg)", ejercicio.descanso, 0, 3600, 5, (v) => { ejercicio.descanso = v; })
-  );
+  const esTiempo = ejercicio.tipo_medicion === "TIEMPO";
+  const controles = esTiempo
+    ? [campoNumero(
+        "Duración objetivo (min)",
+        ejercicio.duracion_sugerida_segundos === null ? "" : ejercicio.duracion_sugerida_segundos / 60,
+        0.5, 1440, 0.5,
+        (v) => { ejercicio.duracion_sugerida_segundos = v === "" ? null : Math.round(Number(v) * 60); }
+      )]
+    : [
+        campoNumero("Series", ejercicio.series, 1, 20, 1, (v) => { ejercicio.series = v; }),
+        campoNumero("Repeticiones", ejercicio.repeticiones, 1, 100, 1, (v) => { ejercicio.repeticiones = v; }),
+        ...(ejercicio.usa_peso_corporal
+          ? [el("p", { class: "rutina-meta", text: "Carga: se copia tu peso del perfil al entrenar." })]
+          : [campoNumero("Peso sugerido (kg)", ejercicio.peso, 0, 1000, 0.5, (v) => { ejercicio.peso = v; })]),
+        campoNumero("Descanso (seg)", ejercicio.descanso, 0, 3600, 5, (v) => { ejercicio.descanso = v; }),
+      ];
+  const campos = el("div", { class: "ej-campos" }, ...controles);
   return el("div", { class: "ej-tarjeta" }, el("div", { class: "ej-cabecera" }, titulo, botones), campos);
 }
+
 
 function pintarTabs() {
   tabsDias.replaceChildren(
@@ -192,8 +205,11 @@ function pintarPanel() {
             ejercicio_id: elegido.id,
             nombre_ejercicio: elegido.nombre,
             grupo: elegido.grupo_principal,
-            series: 3,
-            repeticiones: 10,
+            tipo_medicion: elegido.tipo_medicion,
+            usa_peso_corporal: elegido.usa_peso_corporal,
+            series: elegido.tipo_medicion === "TIEMPO" ? null : 3,
+            repeticiones: elegido.tipo_medicion === "TIEMPO" ? null : 10,
+            duracion_sugerida_segundos: elegido.tipo_medicion === "TIEMPO" ? 600 : null,
             peso: "",
             descanso: "",
           });
@@ -231,16 +247,23 @@ function validar() {
     if (!dia.ejercicios.length) return `El ${nombreDia} necesita al menos un ejercicio.`;
 
     for (const ejercicio of dia.ejercicios) {
+      const nombre = ejercicio.nombre_ejercicio;
+      if (ejercicio.tipo_medicion === "TIEMPO") {
+        const duracion = Number(ejercicio.duracion_sugerida_segundos);
+        if (!Number.isInteger(duracion) || duracion < 1 || duracion > 86400) {
+          return `Revisá la duración objetivo de "${nombre}" (entre 1 segundo y 24 horas).`;
+        }
+        continue;
+      }
       const series = Number(ejercicio.series);
       const repeticiones = Number(ejercicio.repeticiones);
-      const nombre = ejercicio.nombre_ejercicio;
       if (!Number.isInteger(series) || series < 1 || series > 20) {
         return `Revisá las series de "${nombre}" (entre 1 y 20).`;
       }
       if (!Number.isInteger(repeticiones) || repeticiones < 1 || repeticiones > 100) {
         return `Revisá las repeticiones de "${nombre}" (entre 1 y 100).`;
       }
-      if (ejercicio.peso !== "" && !(Number(ejercicio.peso) >= 0 && Number(ejercicio.peso) <= 1000)) {
+      if (!ejercicio.usa_peso_corporal && ejercicio.peso !== "" && !(Number(ejercicio.peso) >= 0 && Number(ejercicio.peso) <= 1000)) {
         return `Revisá el peso de "${nombre}" (entre 0 y 1000 kg).`;
       }
       if (
@@ -265,10 +288,11 @@ function armarCuerpo() {
       ejercicios: dia.ejercicios.map((ejercicio) => ({
         id: ejercicio.id ?? null,
         ejercicio_id: ejercicio.ejercicio_id,
-        series: Number(ejercicio.series),
-        repeticiones: Number(ejercicio.repeticiones),
-        peso_sugerido_kg: ejercicio.peso === "" ? null : Number(ejercicio.peso),
-        descanso_segundos: ejercicio.descanso === "" ? null : Number(ejercicio.descanso),
+        series: ejercicio.tipo_medicion === "TIEMPO" ? null : Number(ejercicio.series),
+        repeticiones: ejercicio.tipo_medicion === "TIEMPO" ? null : Number(ejercicio.repeticiones),
+        duracion_sugerida_segundos: ejercicio.tipo_medicion === "TIEMPO" ? Number(ejercicio.duracion_sugerida_segundos) : null,
+        peso_sugerido_kg: ejercicio.usa_peso_corporal || ejercicio.tipo_medicion === "TIEMPO" || ejercicio.peso === "" ? null : Number(ejercicio.peso),
+        descanso_segundos: ejercicio.tipo_medicion === "TIEMPO" || ejercicio.descanso === "" ? null : Number(ejercicio.descanso),
       })),
     })),
   };

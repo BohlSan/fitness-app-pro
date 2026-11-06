@@ -167,3 +167,30 @@ def test_grupo_secundario_igual_al_principal_devuelve_422(client, headers_usuari
     )
 
     assert response.status_code == 422
+
+def test_la_factory_conserva_tipo_de_medicion_y_uso_de_peso_corporal():
+    from app.models.ejercicio import TipoMedicion
+
+    datos = EjercicioCreate(
+        nombre="Dominadas",
+        grupo_principal=GrupoMuscular.ESPALDA,
+        usa_peso_corporal=True,
+    )
+    ejercicio = EjercicioFactory.crear_base(datos)
+
+    assert ejercicio.tipo_medicion == TipoMedicion.REPETICIONES
+    assert ejercicio.usa_peso_corporal is True
+
+
+def test_no_se_puede_combinar_peso_corporal_con_medicion_por_tiempo():
+    import pytest
+    from pydantic import ValidationError
+    from app.models.ejercicio import TipoMedicion
+
+    with pytest.raises(ValidationError):
+        EjercicioCreate(
+            nombre="Cinta",
+            grupo_principal=GrupoMuscular.CARDIO,
+            tipo_medicion=TipoMedicion.TIEMPO,
+            usa_peso_corporal=True,
+        )

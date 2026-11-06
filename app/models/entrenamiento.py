@@ -85,5 +85,7 @@ class Serie:
     )
     numero: Mapped[int] = mapped_column()
     peso_kg: Mapped[float | None] = mapped_column(Float, default=None)
-    repeticiones: Mapped[int] = mapped_column()
+    # Fuerza: repeticiones. Medición por tiempo: duración en segundos.
+    repeticiones: Mapped[int | None] = mapped_column(nullable=True)
+    duracion_segundos: Mapped[int | None] = mapped_column(default=None)
     completada: Mapped[bool] = mapped_column(default=False)

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Ejercicios</title>
-  <link rel="stylesheet" href="/css/styles.css?v=4">
+  <link rel="stylesheet" href="/css/styles.css?v=5">
   <link rel="stylesheet" href="/css/ejercicios.css?v=1">
 </head>
 <body>
@@ -35,13 +35,22 @@
       <label>Grupo muscular secundario (opcional)
         <select id="grupo_secundario"></select>
       </label>
+      <label>Tipo de medición
+        <select id="tipo_medicion">
+          <option value="REPETICIONES">Series y repeticiones</option>
+          <option value="TIEMPO">Duración (cardio o isométrico)</option>
+        </select>
+      </label>
+      <label class="solo-propios">
+        <input type="checkbox" id="usa_peso_corporal"> Usa el peso corporal como carga
+      </label>
       <p class="mensaje-error" id="error-form" role="alert"></p>
       <button type="submit" class="boton" id="guardar">Guardar</button>
     </form>
   </dialog>
 
-  <script src="/js/api.js?v=3"></script>
-  <script src="/js/ejercicios-ui.js?v=1"></script>
+  <script src="/js/api.js?v=4"></script>
+  <script src="/js/ejercicios-ui.js?v=2"></script>
   <script>
     requerirSesion();
     const usuario = obtenerUsuario();
@@ -52,8 +61,11 @@
     const campoDescripcion = document.getElementById("descripcion");
     const selectPrincipal = document.getElementById("grupo_principal");
     const selectSecundario = document.getElementById("grupo_secundario");
+    const selectTipoMedicion = document.getElementById("tipo_medicion");
+    const checkPesoCorporal = document.getElementById("usa_peso_corporal");
     const errorForm = document.getElementById("error-form");
     const botonGuardar = document.getElementById("guardar");
+
 
     let buscador = null;
     let editandoId = null;
@@ -82,6 +94,8 @@
       campoDescripcion.value = ejercicio && ejercicio.descripcion ? ejercicio.descripcion : "";
       selectPrincipal.value = ejercicio ? ejercicio.grupo_principal : selectPrincipal.options[0].value;
       selectSecundario.value = ejercicio && ejercicio.grupo_secundario ? ejercicio.grupo_secundario : "";
+      selectTipoMedicion.value = ejercicio ? ejercicio.tipo_medicion : "REPETICIONES";
+      checkPesoCorporal.checked = !!(ejercicio && ejercicio.usa_peso_corporal);
       errorForm.textContent = "";
       dialogo.showModal();
       campoNombre.focus();
@@ -132,11 +146,18 @@
         return;
       }
 
+      if (checkPesoCorporal.checked && selectTipoMedicion.value === "TIEMPO") {
+        errorForm.textContent = "Los ejercicios por tiempo no pueden usar peso corporal como carga.";
+        return;
+      }
+
       const cuerpo = {
         nombre: nombre,
         descripcion: campoDescripcion.value.trim() || null,
         grupo_principal: selectPrincipal.value,
         grupo_secundario: selectSecundario.value || null,
+        tipo_medicion: selectTipoMedicion.value,
+        usa_peso_corporal: checkPesoCorporal.checked,
       };
 
       botonGuardar.disabled = true;

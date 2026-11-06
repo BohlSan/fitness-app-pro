@@ -29,8 +29,17 @@ class EntrenamientoStart(BaseModel):
 class SerieIn(BaseModel):
     id: int | None = None  # con id: se actualiza; sin id: se crea
     peso_kg: float | None = Field(default=None, ge=0, le=1000)
-    repeticiones: int = Field(ge=1, le=200)
+    repeticiones: int | None = Field(default=None, ge=1, le=200)
+    duracion_segundos: int | None = Field(default=None, ge=1, le=86400)
     completada: bool = False
+
+    @model_validator(mode="after")
+    def validar_un_solo_tipo_de_registro(self):
+        if (self.repeticiones is None) == (self.duracion_segundos is None):
+            raise ValueError("Una serie debe registrar repeticiones o duración, pero no ambas")
+        if self.duracion_segundos is not None and self.peso_kg is not None:
+            raise ValueError("Un registro por tiempo no lleva peso")
+        return self
 
 
 class EjercicioEntrenamientoIn(BaseModel):
@@ -65,7 +74,8 @@ class SerieOut(BaseModel):
     id: int
     numero: int
     peso_kg: float | None
-    repeticiones: int
+    repeticiones: int | None
+    duracion_segundos: int | None
     completada: bool
 
 
@@ -116,3 +126,13 @@ class DiaCalendarioOut(BaseModel):
     fecha: date
     cantidad: int
     dificultad_max: int | None
+
+
+class RutinaPlanificadaOut(BaseModel):
+    rutina_nombre: str
+    dia_nombre: str
+
+
+class DiaPlanificadoOut(BaseModel):
+    fecha: date
+    rutinas: list[RutinaPlanificadaOut]

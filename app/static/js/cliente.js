@@ -253,7 +253,11 @@ async function verEntrenamiento(id) {
           "ul",
           { class: "series-detalle" },
           ...item.series.map((serie) =>
-            el("li", { text: `Serie ${serie.numero}: ${serie.peso_kg ?? "—"} kg × ${serie.repeticiones}` })
+            el("li", {
+              text: item.ejercicio.tipo_medicion === "TIEMPO"
+                ? `Duración: ${formatoDuracionCorta(serie.duracion_segundos)}`
+                : `Serie ${serie.numero}: ${serie.peso_kg ?? "—"} kg × ${serie.repeticiones}`,
+            })
           )
         ),
         item.notas ? el("p", { class: "rutina-meta", text: `📝 ${item.notas}` }) : ""

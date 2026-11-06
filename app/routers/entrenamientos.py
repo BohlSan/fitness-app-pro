@@ -9,6 +9,7 @@ from app.dependencies import get_current_user
 from app.models.usuario import Usuario
 from app.schemas.entrenamiento import (
     DiaCalendarioOut,
+    DiaPlanificadoOut,
     EntrenamientoOut,
     EntrenamientoStart,
     EntrenamientoSync,
@@ -65,6 +66,16 @@ def calendario(
     db: Session = Depends(get_db),
 ):
     return historial_service.calendario_mensual(db, usuario.id, anio, mes)
+
+
+@router.get("/calendario/planificados", response_model=list[DiaPlanificadoOut])
+def calendario_planificado(
+    anio: Annotated[int, Query(ge=2000, le=2100)],
+    mes: Annotated[int, Query(ge=1, le=12)],
+    usuario: Usuario = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    return historial_service.calendario_planificado(db, usuario.id, anio, mes)
 
 
 @router.post("", response_model=EntrenamientoOut, status_code=status.HTTP_201_CREATED)
