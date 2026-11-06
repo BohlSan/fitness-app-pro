@@ -510,6 +510,7 @@ function datoResumen(valor, etiqueta) {
 function mostrarResumen(entrenamiento) {
   vistaEntrenamiento.classList.add("oculto");
   vistaResumen.classList.remove("oculto");
+  window.scrollTo({ top: 0, behavior: "instant" });
 
   document.getElementById("resumen-titulo").textContent =
     `${entrenamiento.titulo} · ${formatoFechaLarga(entrenamiento.fecha)}`;

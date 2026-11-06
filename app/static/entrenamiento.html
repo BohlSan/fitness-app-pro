@@ -7,11 +7,12 @@
   <link rel="stylesheet" href="/css/styles.css?v=5">
   <link rel="stylesheet" href="/css/ejercicios.css?v=1">
   <link rel="stylesheet" href="/css/rutinas.css?v=1">
-  <link rel="stylesheet" href="/css/entrenamiento.css?v=2">
+  <link rel="stylesheet" href="/css/entrenamiento.css?v=3">
 </head>
 <body>
+  <main class="pagina">
   <!-- Vista: entrenamiento en curso -->
-  <main class="pagina" id="vista-entrenamiento">
+  <div class="vista-contenido" id="vista-entrenamiento">
     <a class="enlace-volver" href="/entrenar.html">← Entrenar</a>
     <header class="cabecera-entreno">
       <h1 id="titulo">Entrenamiento</h1>
@@ -27,10 +28,10 @@
       <button type="button" class="boton" id="terminar">Terminar rutina</button>
       <button type="button" class="boton-chico peligro" id="descartar">Descartar entrenamiento</button>
     </div>
-  </main>
+  </div>
 
   <!-- Vista: resumen al terminar -->
-  <main class="pagina oculto" id="vista-resumen">
+  <div class="vista-contenido oculto" id="vista-resumen">
     <h1 id="resumen-encabezado">Detalle del entrenamiento</h1>
     <p class="subtitulo" id="resumen-titulo"></p>
     <div class="resumen-grid" id="resumen-datos"></div>
@@ -40,6 +41,7 @@
     <ul class="resumen-lista" id="resumen-ejercicios"></ul>
     <a class="boton" href="/historial.html">Ver historial</a>
     <a class="boton secundario" href="/entrenar.html">Volver a Entrenar</a>
+  </div>
   </main>
 
   <!-- Cierre: agua, dificultad, cansancio y ánimo -->
@@ -80,6 +82,6 @@
   <script src="/js/api.js?v=4"></script>
   <script src="/js/ejercicios-ui.js?v=2"></script>
   <script src="/js/fechas-ui.js?v=1"></script>
-  <script src="/js/entrenamiento.js?v=5"></script>
+  <script src="/js/entrenamiento.js?v=6"></script>
 </body>
 </html>

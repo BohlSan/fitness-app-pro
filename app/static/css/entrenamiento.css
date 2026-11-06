@@ -113,3 +113,7 @@
 .fila-tiempo input { width: 100%; padding: 8px; }
 .ejercicio-tiempo .check-serie { width: 44px; }
 .fila-serie input:disabled { color: var(--texto-suave); background: #f0f2f4; opacity: 1; }
+
+/* ---------- Vistas internas de entrenamiento.html ---------- */
+/* Un solo <main> con dos vistas: sus hijos siguen siendo parte del layout de .pagina */
+.vista-contenido { display: contents; }
