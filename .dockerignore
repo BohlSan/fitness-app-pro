@@ -1,0 +1,28 @@
+# Control de versiones y editores
+.git
+.gitignore
+.idea
+.vscode
+
+# Entornos y secretos (nunca deben entrar en la imagen)
+.venv
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__
+*.py[cod]
+.pytest_cache
+.coverage
+htmlcov
+
+# No hacen falta para ejecutar la aplicación
+tests
+docs
+*.md
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore

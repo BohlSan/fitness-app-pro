@@ -27,7 +27,7 @@ con un rol de **Personal Trainer**, administrar clientes. Proyecto grupal de Pro
 | Frontend | HTML, CSS y JavaScript sin framework (servido por FastAPI), Chart.js |
 | Tests | pytest |
 | Dependencias | Poetry |
-| Despliegue | Render |
+| Despliegue | Render, Docker |
 
 ## Puesta en marcha local
 
@@ -69,7 +69,27 @@ con un rol de **Personal Trainer**, administrar clientes. Proyecto grupal de Pro
    - Documentación interactiva de la API: http://127.0.0.1:8000/docs
    - Estado del servicio: http://127.0.0.1:8000/health
 
-## Tests
+## Docker
+
+Requisito: [Docker](https://www.docker.com/) con Docker Compose. No hace falta instalar Python, Poetry ni Supabase.
+
+```
+docker compose up --build
+```
+
+Esto construye la imagen de la aplicación, levanta un PostgreSQL local, crea las tablas, carga el catálogo de
+ejercicios y arranca el servidor en http://localhost:8000 (documentación en `/docs`, estado en `/health`).
+
+| Comando | Para qué sirve |
+|---|---|
+| `docker compose up --build` | Construye y levanta todo (agregar `-d` para dejarlo en segundo plano) |
+| `docker compose logs -f app` | Ver los logs de la aplicación |
+| `docker compose down` | Detiene todo y conserva los datos |
+| `docker compose down -v` | Detiene todo y **borra** la base local |
+| `docker build -t fitness-app .` | Construye solo la imagen de la aplicación |
+
+Para usar otra `SECRET_KEY`, definirla en un archivo `.env` (ver `.env.example`) o como variable de entorno antes
+de levantar. La imagen también sirve para Render: respeta la variable `PORT` y no incluye el `.env`.
 
 ```
 poetry run pytest -v
