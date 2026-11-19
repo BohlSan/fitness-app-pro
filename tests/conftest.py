@@ -129,7 +129,7 @@ def entrenar(client, db):
         db.commit()
         return creado["id"]
 
-        return _entrenar
+    return _entrenar
 
 
 @pytest.fixture()
