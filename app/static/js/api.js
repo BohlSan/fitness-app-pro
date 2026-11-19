@@ -139,7 +139,7 @@ function montarNavegacion() {
   sidebar.innerHTML = `
     <a class="app-brand" href="/home.html">
       <span class="app-brand-mark" aria-hidden="true">✳</span>
-      <span>FITNESS<small>PERFORMANCE</small></span>
+      <span>HIT<small>PERFORMANCE</small></span>
     </a>
     <nav class="app-nav" aria-label="Secciones"></nav>
     <div class="app-sidebar-footer">
